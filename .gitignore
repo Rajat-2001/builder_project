@@ -1,0 +1,51 @@
+# ========================
+# Environment & Secrets
+# ========================
+.env
+*.env
+
+# ========================
+# Python virtual environment
+# ========================
+builder/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# ========================
+# Python packaging
+# ========================
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ========================
+# Pytest / coverage
+# ========================
+.pytest_cache/
+htmlcov/
+.coverage
+
+# ========================
+# Node / Frontend
+# ========================
+node_modules/
+dist/
+.vite/
+
+# ========================
+# OS junk
+# ========================
+.DS_Store
+Thumbs.db
+
+# ========================
+# IDE / Editor
+# ========================
+.vscode/
+.idea/
+*.swp
+*.swo
