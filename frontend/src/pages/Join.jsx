@@ -316,27 +316,29 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { validateInvite, register } from "../api/auth";
 
 const ROLE_CONFIG = {
-  admin:     { label:"Admin",     color:"#F59E0B", bg:"rgba(245,158,11,0.1)",  border:"rgba(245,158,11,0.25)" },
-  team_lead: { label:"Team Lead", color:"#60A5FA", bg:"rgba(96,165,250,0.1)",  border:"rgba(96,165,250,0.25)" },
-  worker:    { label:"Worker",    color:"#34D399", bg:"rgba(52,211,153,0.1)",  border:"rgba(52,211,153,0.25)" },
+  admin:     { label:"Administrator", color:"#0A66C2", bg:"#EEF3FB", border:"#C0D7F5" },
+  team_lead: { label:"Team Leader",   color:"#057642", bg:"#F0FAF5", border:"#B8DFC9" },
+  worker:    { label:"Worker",        color:"#7A3E00", bg:"#FDF3E7", border:"#F0C98A" },
+  architect: { label:"Architect",     color:"#6B3FA0", bg:"#F5EFFC", border:"#D4AFEF" },
+  customer:  { label:"Customer",      color:"#B24020", bg:"#FDF0EC", border:"#F5C2B0" },
 };
 
 export default function Join() {
-  const navigate             = useNavigate();
-  const [searchParams]       = useSearchParams();
-  const token                = searchParams.get("token");
+  const navigate         = useNavigate();
+  const [searchParams]   = useSearchParams();
+  const token            = searchParams.get("token");
 
-  const [tokenStatus,   setTokenStatus]   = useState("checking");
-  const [tokenMessage,  setTokenMessage]  = useState("");
-  const [role,          setRole]          = useState(null);
-  const [fullName,      setFullName]      = useState("");
-  const [phone,         setPhone]         = useState("");
-  const [password,      setPassword]      = useState("");
-  const [email,         setEmail]         = useState("");
-  const [error,         setError]         = useState("");
-  const [loading,       setLoading]       = useState(false);
-  const [success,       setSuccess]       = useState(false);
-  const [focused,       setFocused]       = useState("");
+  const [tokenStatus,  setTokenStatus]  = useState("checking");
+  const [tokenMessage, setTokenMessage] = useState("");
+  const [role,         setRole]         = useState(null);
+  const [fullName,     setFullName]     = useState("");
+  const [phone,        setPhone]        = useState("");
+  const [password,     setPassword]     = useState("");
+  const [email,        setEmail]        = useState("");
+  const [error,        setError]        = useState("");
+  const [loading,      setLoading]      = useState(false);
+  const [success,      setSuccess]      = useState(false);
+  const [focused,      setFocused]      = useState("");
 
   useEffect(() => {
     if (!token) {
@@ -367,100 +369,129 @@ export default function Join() {
     }
   };
 
-  const sharedStyles = `
-    @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap');
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-    input::placeholder { color: #334155; }
-    button:hover:not(:disabled) { background: #FBBF24 !important; transform: translateY(-1px); }
-  `;
-
+  // ── Checking ──
   if (tokenStatus === "checking") return (
-    <div style={{...styles.root, alignItems:"center", justifyContent:"center"}}>
-      <style>{sharedStyles}</style>
-      <div style={styles.gridOverlay} />
-      <div style={{textAlign:"center"}}>
-        <div style={styles.logoRow2}>
-          <div style={styles.logoIcon}><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 21L3 8L12 3L21 8V21" stroke="#F59E0B" strokeWidth="2" strokeLinejoin="round"/><path d="M9 21V14H15V21" stroke="#F59E0B" strokeWidth="2" strokeLinejoin="round"/></svg></div>
-          <span style={styles.logoText}>BUILDER</span>
+    <div style={{...s.root, alignItems:"center", justifyContent:"center"}}>
+      <style>{css}</style>
+      <div style={s.navbar}>
+        <div style={s.navInner}>
+          <div style={s.navLogo}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 21V8L12 3L21 8V21" stroke="#0A66C2" strokeWidth="2.5" strokeLinejoin="round"/><path d="M9 21V14H15V21" stroke="#0A66C2" strokeWidth="2.5" strokeLinejoin="round"/></svg>
+            <span style={s.navBrand}>Builder</span>
+          </div>
         </div>
-        <p style={{color:"#475569", fontSize:"14px", animation:"pulse 1.5s ease infinite"}}>Verifying your invite link...</p>
+      </div>
+      <div style={{flex:1, display:"flex", alignItems:"center", justifyContent:"center"}}>
+        <p style={{color:"#666", fontSize:"15px", animation:"pulse 1.5s ease infinite"}}>Verifying your invite link...</p>
       </div>
     </div>
   );
 
+  // ── Invalid ──
   if (tokenStatus === "invalid") return (
-    <div style={{...styles.root, alignItems:"center", justifyContent:"center"}}>
-      <style>{sharedStyles}</style>
-      <div style={styles.gridOverlay} />
-      <div style={{...styles.card, textAlign:"center", maxWidth:"400px", animation:"fadeUp 0.4s ease forwards"}}>
-        <div style={{width:"56px", height:"56px", borderRadius:"50%", background:"rgba(248,113,113,0.1)", border:"1px solid rgba(248,113,113,0.2)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 20px"}}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#F87171" strokeWidth="2"/><path d="M15 9L9 15M9 9L15 15" stroke="#F87171" strokeWidth="2" strokeLinecap="round"/></svg>
+    <div style={s.root}>
+      <style>{css}</style>
+      <div style={s.navbar}>
+        <div style={s.navInner}>
+          <div style={s.navLogo}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 21V8L12 3L21 8V21" stroke="#0A66C2" strokeWidth="2.5" strokeLinejoin="round"/><path d="M9 21V14H15V21" stroke="#0A66C2" strokeWidth="2.5" strokeLinejoin="round"/></svg>
+            <span style={s.navBrand}>Builder</span>
+          </div>
         </div>
-        <h2 style={{...styles.cardTitle, marginBottom:"8px"}}>Invalid Invite</h2>
-        <p style={{fontSize:"14px", color:"#475569", marginBottom:"28px", lineHeight:"1.6"}}>{tokenMessage}</p>
-        <button onClick={() => navigate("/login")} style={{...styles.submitBtn, background:"transparent", border:"1px solid rgba(245,158,11,0.3)", color:"#F59E0B"}}>
-          Back to login
-        </button>
+      </div>
+      <div style={{flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"40px 24px"}}>
+        <div style={{...s.card, maxWidth:"420px", textAlign:"center", animation:"fadeUp 0.35s ease forwards"}}>
+          <div style={{width:"52px", height:"52px", borderRadius:"50%", background:"#FFF0F0", border:"1px solid #FFCCCC", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 20px"}}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#CC1016" strokeWidth="2"/><path d="M15 9L9 15M9 9L15 15" stroke="#CC1016" strokeWidth="2" strokeLinecap="round"/></svg>
+          </div>
+          <h2 style={{fontSize:"20px", fontWeight:"700", color:"#000000E6", marginBottom:"8px"}}>Invalid Invite Link</h2>
+          <p style={{fontSize:"14px", color:"#666", marginBottom:"24px", lineHeight:"1.6"}}>{tokenMessage}</p>
+          <button onClick={() => navigate("/login")} style={{...s.btn, width:"auto", padding:"10px 28px"}}>Back to sign in</button>
+        </div>
       </div>
     </div>
   );
 
+  // ── Success ──
   if (success) return (
-    <div style={{...styles.root, alignItems:"center", justifyContent:"center"}}>
-      <style>{sharedStyles}</style>
-      <div style={styles.gridOverlay} />
-      <div style={{...styles.card, textAlign:"center", maxWidth:"400px", animation:"fadeUp 0.4s ease forwards"}}>
-        <div style={{width:"56px", height:"56px", borderRadius:"50%", background:"rgba(52,211,153,0.1)", border:"1px solid rgba(52,211,153,0.2)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 20px"}}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 13L9 17L19 7" stroke="#34D399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+    <div style={s.root}>
+      <style>{css}</style>
+      <div style={s.navbar}>
+        <div style={s.navInner}>
+          <div style={s.navLogo}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 21V8L12 3L21 8V21" stroke="#0A66C2" strokeWidth="2.5" strokeLinejoin="round"/><path d="M9 21V14H15V21" stroke="#0A66C2" strokeWidth="2.5" strokeLinejoin="round"/></svg>
+            <span style={s.navBrand}>Builder</span>
+          </div>
         </div>
-        <h2 style={{...styles.cardTitle, marginBottom:"8px"}}>Account created!</h2>
-        <p style={{fontSize:"14px", color:"#475569"}}>Redirecting you to login...</p>
+      </div>
+      <div style={{flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"40px 24px"}}>
+        <div style={{...s.card, maxWidth:"420px", textAlign:"center", animation:"fadeUp 0.35s ease forwards"}}>
+          <div style={{width:"52px", height:"52px", borderRadius:"50%", background:"#F0FAF5", border:"1px solid #B8DFC9", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 20px"}}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 13L9 17L19 7" stroke="#057642" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </div>
+          <h2 style={{fontSize:"20px", fontWeight:"700", color:"#000000E6", marginBottom:"8px"}}>Account created!</h2>
+          <p style={{fontSize:"14px", color:"#666"}}>Redirecting you to sign in...</p>
+        </div>
       </div>
     </div>
   );
 
   const roleConf = ROLE_CONFIG[role] || ROLE_CONFIG.worker;
 
+  // ── Valid — signup form ──
   return (
-    <div style={{...styles.root, alignItems:"center", justifyContent:"center", padding:"40px 20px"}}>
-      <style>{sharedStyles}</style>
-      <div style={styles.gridOverlay} />
+    <div style={s.root}>
+      <style>{css}</style>
 
-      <div style={{width:"100%", maxWidth:"480px"}}>
-        {/* Header */}
-        <div style={{textAlign:"center", marginBottom:"32px", animation:"fadeUp 0.3s ease forwards"}}>
-          <div style={styles.logoRow2}>
-            <div style={styles.logoIcon}><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 21L3 8L12 3L21 8V21" stroke="#F59E0B" strokeWidth="2" strokeLinejoin="round"/><path d="M9 21V14H15V21" stroke="#F59E0B" strokeWidth="2" strokeLinejoin="round"/></svg></div>
-            <span style={styles.logoText}>BUILDER</span>
+      {/* Navbar */}
+      <div style={s.navbar}>
+        <div style={s.navInner}>
+          <div style={s.navLogo}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 21V8L12 3L21 8V21" stroke="#0A66C2" strokeWidth="2.5" strokeLinejoin="round"/><path d="M9 21V14H15V21" stroke="#0A66C2" strokeWidth="2.5" strokeLinejoin="round"/></svg>
+            <span style={s.navBrand}>Builder</span>
           </div>
-          <p style={{color:"#475569", fontSize:"14px", marginTop:"8px"}}>You've been invited to join</p>
+          <span style={{fontSize:"13px", color:"#666"}}>Construction Site Management</span>
         </div>
+      </div>
 
-        {/* Card */}
-        <div style={{...styles.card, animation:"fadeUp 0.4s ease forwards"}}>
-          {/* Role badge */}
-          <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"28px"}}>
-            <h2 style={styles.cardTitle}>Create account</h2>
-            <span style={{fontSize:"12px", fontWeight:"600", padding:"5px 12px", borderRadius:"20px", background:roleConf.bg, border:`1px solid ${roleConf.border}`, color:roleConf.color, letterSpacing:"0.5px", textTransform:"uppercase"}}>
-              {roleConf.label}
-            </span>
+      <div style={{flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"40px 24px"}}>
+        <div style={{width:"100%", maxWidth:"480px"}}>
+
+          {/* Invite banner */}
+          <div style={{backgroundColor:"#EEF3FB", border:"1px solid #C0D7F5", borderRadius:"8px", padding:"14px 18px", marginBottom:"20px", display:"flex", alignItems:"center", gap:"10px"}}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{flexShrink:0}}><path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4Z" stroke="#0A66C2" strokeWidth="2"/><path d="M22 6L12 13L2 6" stroke="#0A66C2" strokeWidth="2"/></svg>
+            <div>
+              <p style={{fontSize:"13px", fontWeight:"600", color:"#0A66C2", marginBottom:"2px"}}>You've been invited to join Builder</p>
+              <p style={{fontSize:"12px", color:"#555"}}>Fill in your details below to create your account</p>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} style={styles.form}>
-            {[
-              { key:"fullName",  label:"Full name",    type:"text",     val:fullName,  set:setFullName,  placeholder:"John Smith",        required:true },
-              { key:"phone",     label:"Phone number", type:"tel",      val:phone,     set:setPhone,     placeholder:"9999999999",        required:true },
-              { key:"email",     label:"Email",        type:"email",    val:email,     set:setEmail,     placeholder:"john@example.com",  required:false, optional:true },
-              { key:"password",  label:"Password",     type:"password", val:password,  set:setPassword,  placeholder:"••••••••",          required:true },
-            ].map(({ key, label, type, val, set, placeholder, required, optional }) => (
-              <div key={key} style={styles.fieldGroup}>
-                <label style={styles.label}>
-                  {label}
-                  {optional && <span style={{color:"#334155", fontWeight:"400", textTransform:"none", letterSpacing:"0", marginLeft:"4px"}}>(optional)</span>}
-                </label>
-                <div style={{ ...styles.inputWrap, ...(focused === key ? styles.inputWrapFocused : {}) }}>
+          {/* Card */}
+          <div style={{...s.card, animation:"fadeUp 0.35s ease forwards"}}>
+
+            {/* Header row */}
+            <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"24px"}}>
+              <div>
+                <h2 style={{fontSize:"22px", fontWeight:"700", color:"#000000E6", marginBottom:"4px"}}>Create account</h2>
+                <p style={{fontSize:"13px", color:"#666"}}>Complete your profile to get started</p>
+              </div>
+              <span style={{fontSize:"12px", fontWeight:"600", padding:"5px 12px", borderRadius:"16px", backgroundColor:roleConf.bg, border:`1px solid ${roleConf.border}`, color:roleConf.color, whiteSpace:"nowrap"}}>
+                {roleConf.label}
+              </span>
+            </div>
+
+            <form onSubmit={handleSubmit} style={s.form}>
+              {[
+                { key:"fullName", label:"Full name",    type:"text",     val:fullName, set:setFullName, placeholder:"John Smith",       required:true },
+                { key:"phone",    label:"Phone number", type:"tel",      val:phone,    set:setPhone,    placeholder:"9999999999",       required:true },
+                { key:"email",    label:"Email address",type:"email",    val:email,    set:setEmail,    placeholder:"john@example.com", required:false, optional:true },
+                { key:"password", label:"Password",     type:"password", val:password, set:setPassword, placeholder:"Create a password", required:true },
+              ].map(({ key, label, type, val, set, placeholder, required, optional }) => (
+                <div key={key} style={s.fieldGroup}>
+                  <label style={s.label}>
+                    {label}
+                    {optional && <span style={{color:"#999", fontWeight:"400", marginLeft:"4px"}}>(optional)</span>}
+                  </label>
                   <input
                     type={type}
                     value={val}
@@ -469,56 +500,77 @@ export default function Join() {
                     onBlur={() => setFocused("")}
                     placeholder={placeholder}
                     required={required}
-                    style={styles.input}
+                    style={{...s.input, ...(focused === key ? s.inputFocused : {})}}
                   />
                 </div>
-              </div>
-            ))}
+              ))}
 
-            {error && (
-              <div style={styles.errorBox}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{flexShrink:0}}><circle cx="12" cy="12" r="10" stroke="#F87171" strokeWidth="2"/><path d="M12 8V12M12 16H12.01" stroke="#F87171" strokeWidth="2" strokeLinecap="round"/></svg>
-                <span style={styles.errorText}>{error}</span>
-              </div>
-            )}
+              {error && (
+                <div style={s.errorBox}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{flexShrink:0}}><circle cx="12" cy="12" r="10" stroke="#CC1016" strokeWidth="2"/><path d="M12 8V12M12 16H12.01" stroke="#CC1016" strokeWidth="2" strokeLinecap="round"/></svg>
+                  <span style={s.errorText}>{error}</span>
+                </div>
+              )}
 
-            <button type="submit" disabled={loading} style={{ ...styles.submitBtn, ...(loading ? {opacity:0.6, cursor:"not-allowed"} : {}) }}>
-              {loading ? (
-                <span style={{display:"flex", alignItems:"center", justifyContent:"center", gap:"8px"}}>
-                  <span style={styles.spinner} /> Creating account...
-                </span>
-              ) : "Create account →"}
-            </button>
-          </form>
+              <button type="submit" disabled={loading} style={{...s.btn, ...(loading ? s.btnDisabled : {})}} className="btn-hover">
+                {loading ? (
+                  <span style={s.loadRow}><span style={s.spinner} /> Creating account...</span>
+                ) : "Create account"}
+              </button>
+            </form>
+
+            <p style={{fontSize:"13px", color:"#666", textAlign:"center", marginTop:"20px"}}>
+              Already have an account?{" "}
+              <span onClick={() => navigate("/login")} style={{color:"#0A66C2", fontWeight:"600", cursor:"pointer"}}>Sign in</span>
+            </p>
+          </div>
+
+          <p style={{fontSize:"12px", color:"#999", textAlign:"center", marginTop:"16px", lineHeight:"1.6", padding:"0 8px"}}>
+            By creating an account, you agree to Builder's{" "}
+            <span style={{color:"#0A66C2", cursor:"pointer"}}>Terms of Service</span> and{" "}
+            <span style={{color:"#0A66C2", cursor:"pointer"}}>Privacy Policy</span>.
+          </p>
         </div>
+      </div>
 
-        <p style={{textAlign:"center", fontSize:"12px", color:"#334155", marginTop:"20px"}}>
-          Already have an account?{" "}
-          <button onClick={() => navigate("/login")} style={{background:"none", border:"none", color:"#F59E0B", cursor:"pointer", fontSize:"12px", fontFamily:"'Barlow', sans-serif"}}>
-            Sign in
-          </button>
-        </p>
+      {/* Footer */}
+      <div style={s.footer}>
+        {["About", "Help Center", "Privacy", "Terms", "© 2025 Builder"].map((item) => (
+          <span key={item} style={s.footerItem}>{item}</span>
+        ))}
       </div>
     </div>
   );
 }
 
-const styles = {
-  root: { minHeight:"100vh", display:"flex", flexDirection:"column", backgroundColor:"#080E1A", fontFamily:"'Barlow', sans-serif", position:"relative", overflow:"hidden" },
-  gridOverlay: { position:"absolute", inset:0, backgroundImage:`linear-gradient(rgba(245,158,11,0.04) 1px, transparent 1px),linear-gradient(90deg, rgba(245,158,11,0.04) 1px, transparent 1px)`, backgroundSize:"40px 40px", pointerEvents:"none" },
-  logoRow2: { display:"flex", alignItems:"center", gap:"10px", justifyContent:"center", marginBottom:"4px" },
-  logoIcon: { width:"36px", height:"36px", borderRadius:"8px", background:"rgba(245,158,11,0.1)", border:"1px solid rgba(245,158,11,0.2)", display:"flex", alignItems:"center", justifyContent:"center" },
-  logoText: { fontFamily:"'Barlow Condensed', sans-serif", fontSize:"18px", fontWeight:"700", letterSpacing:"4px", color:"#F59E0B" },
-  card: { background:"rgba(15,23,42,0.8)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:"16px", padding:"36px" },
-  cardTitle: { fontFamily:"'Barlow Condensed', sans-serif", fontSize:"24px", fontWeight:"700", color:"#F1F5F9", letterSpacing:"0.5px" },
-  form: { display:"flex", flexDirection:"column", gap:"18px" },
-  fieldGroup: { display:"flex", flexDirection:"column", gap:"8px" },
-  label: { fontSize:"11px", fontWeight:"600", color:"#64748B", textTransform:"uppercase", letterSpacing:"0.8px" },
-  inputWrap: { display:"flex", alignItems:"center", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:"10px", padding:"0 16px", transition:"border-color 0.2s, box-shadow 0.2s" },
-  inputWrapFocused: { borderColor:"rgba(245,158,11,0.5)", boxShadow:"0 0 0 3px rgba(245,158,11,0.08)" },
-  input: { flex:1, background:"transparent", border:"none", outline:"none", padding:"13px 0", fontSize:"14px", color:"#F1F5F9", fontFamily:"'Barlow', sans-serif", width:"100%" },
-  errorBox: { display:"flex", alignItems:"center", gap:"8px", background:"rgba(248,113,113,0.06)", border:"1px solid rgba(248,113,113,0.2)", borderRadius:"8px", padding:"10px 14px" },
-  errorText: { fontSize:"13px", color:"#F87171" },
-  submitBtn: { width:"100%", padding:"14px", background:"#F59E0B", color:"#0F172A", border:"none", borderRadius:"10px", fontSize:"15px", fontWeight:"700", fontFamily:"'Barlow', sans-serif", cursor:"pointer", letterSpacing:"0.5px", transition:"background 0.2s, transform 0.1s", marginTop:"4px" },
-  spinner: { width:"14px", height:"14px", border:"2px solid rgba(15,23,42,0.3)", borderTop:"2px solid #0F172A", borderRadius:"50%", display:"inline-block", animation:"spin 0.7s linear infinite" },
+const css = `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .btn-hover:hover:not(:disabled) { background: #004182 !important; }
+  input::placeholder { color: #999; font-size: 14px; }
+  * { box-sizing: border-box; }
+`;
+
+const s = {
+  root: { minHeight:"100vh", backgroundColor:"#F3F2EF", fontFamily:"'Inter', sans-serif", display:"flex", flexDirection:"column" },
+  navbar: { backgroundColor:"#FFFFFF", borderBottom:"1px solid #E0DFDC", position:"sticky", top:0, zIndex:100 },
+  navInner: { maxWidth:"1128px", margin:"0 auto", padding:"12px 24px", display:"flex", alignItems:"center", justifyContent:"space-between" },
+  navLogo: { display:"flex", alignItems:"center", gap:"8px" },
+  navBrand: { fontSize:"20px", fontWeight:"700", color:"#0A66C2", letterSpacing:"-0.3px" },
+  card: { backgroundColor:"#FFFFFF", borderRadius:"8px", boxShadow:"0 0 0 1px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.06)", padding:"32px" },
+  form: { display:"flex", flexDirection:"column", gap:"16px" },
+  fieldGroup: { display:"flex", flexDirection:"column", gap:"6px" },
+  label: { fontSize:"13px", fontWeight:"600", color:"#333" },
+  input: { width:"100%", padding:"12px 14px", fontSize:"15px", border:"1.5px solid #C9C5C0", borderRadius:"6px", outline:"none", fontFamily:"'Inter', sans-serif", color:"#000000E6", transition:"border-color 0.15s, box-shadow 0.15s", backgroundColor:"#FFFFFF" },
+  inputFocused: { borderColor:"#0A66C2", boxShadow:"0 0 0 2px rgba(10,102,194,0.15)" },
+  errorBox: { display:"flex", alignItems:"center", gap:"8px", backgroundColor:"#FFF0F0", border:"1px solid #FFCCCC", borderRadius:"6px", padding:"10px 12px" },
+  errorText: { fontSize:"13px", color:"#CC1016" },
+  btn: { width:"100%", padding:"14px", backgroundColor:"#0A66C2", color:"#FFFFFF", border:"none", borderRadius:"24px", fontSize:"16px", fontWeight:"600", fontFamily:"'Inter', sans-serif", cursor:"pointer", transition:"background 0.2s" },
+  btnDisabled: { opacity:0.6, cursor:"not-allowed" },
+  loadRow: { display:"flex", alignItems:"center", justifyContent:"center", gap:"8px" },
+  spinner: { width:"14px", height:"14px", border:"2px solid rgba(255,255,255,0.3)", borderTop:"2px solid #FFF", borderRadius:"50%", display:"inline-block", animation:"spin 0.7s linear infinite" },
+  footer: { borderTop:"1px solid #E0DFDC", backgroundColor:"#FFFFFF", padding:"16px 24px", display:"flex", flexWrap:"wrap", gap:"16px", justifyContent:"center" },
+  footerItem: { fontSize:"12px", color:"#666", cursor:"pointer" },
 };

@@ -47,73 +47,126 @@
 // }
 
 
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
 import Join  from "./pages/Join";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const ROLE_CONFIG = {
-  admin:     { label:"Admin",     color:"#F59E0B", bg:"rgba(245,158,11,0.1)",  border:"rgba(245,158,11,0.2)" },
-  team_lead: { label:"Team Lead", color:"#60A5FA", bg:"rgba(96,165,250,0.1)",  border:"rgba(96,165,250,0.2)" },
-  worker:    { label:"Worker",    color:"#34D399", bg:"rgba(52,211,153,0.1)",  border:"rgba(52,211,153,0.2)" },
+  admin:     { label:"Administrator", color:"#0A66C2", bg:"#EEF3FB", border:"#C0D7F5" },
+  team_lead: { label:"Team Leader",   color:"#057642", bg:"#F0FAF5", border:"#B8DFC9" },
+  worker:    { label:"Worker",        color:"#7A3E00", bg:"#FDF3E7", border:"#F0C98A" },
+  architect: { label:"Architect",     color:"#6B3FA0", bg:"#F5EFFC", border:"#D4AFEF" },
+  customer:  { label:"Customer",      color:"#B24020", bg:"#FDF0EC", border:"#F5C2B0" },
 };
 
 function Dashboard() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const roleConf = ROLE_CONFIG[user?.role] || ROLE_CONFIG.worker;
 
   return (
-    <div style={{ minHeight:"100vh", backgroundColor:"#080E1A", fontFamily:"'Barlow', sans-serif", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"40px 20px", position:"relative" }}>
-      {/* Grid bg */}
-      <div style={{ position:"absolute", inset:0, backgroundImage:`linear-gradient(rgba(245,158,11,0.04) 1px, transparent 1px),linear-gradient(90deg, rgba(245,158,11,0.04) 1px, transparent 1px)`, backgroundSize:"40px 40px", pointerEvents:"none" }} />
+    <div style={ds.root}>
+      <style>{css}</style>
 
-      <div style={{ width:"100%", maxWidth:"480px", position:"relative" }}>
-        {/* Logo */}
-        <div style={{ display:"flex", alignItems:"center", gap:"10px", justifyContent:"center", marginBottom:"40px" }}>
-          <div style={{ width:"36px", height:"36px", borderRadius:"8px", background:"rgba(245,158,11,0.1)", border:"1px solid rgba(245,158,11,0.2)", display:"flex", alignItems:"center", justifyContent:"center" }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 21L3 8L12 3L21 8V21" stroke="#F59E0B" strokeWidth="2" strokeLinejoin="round"/><path d="M9 21V14H15V21" stroke="#F59E0B" strokeWidth="2" strokeLinejoin="round"/></svg>
+      {/* Navbar */}
+      <div style={ds.navbar}>
+        <div style={ds.navInner}>
+          <div style={ds.navLogo}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M3 21V8L12 3L21 8V21" stroke="#0A66C2" strokeWidth="2.5" strokeLinejoin="round"/>
+              <path d="M9 21V14H15V21" stroke="#0A66C2" strokeWidth="2.5" strokeLinejoin="round"/>
+            </svg>
+            <span style={ds.navBrand}>Builder</span>
           </div>
-          <span style={{ fontFamily:"'Barlow Condensed', sans-serif", fontSize:"18px", fontWeight:"700", letterSpacing:"4px", color:"#F59E0B" }}>BUILDER</span>
+          <div style={ds.navRight}>
+            <span style={ds.navName}>{user?.full_name}</span>
+            <button onClick={logout} style={ds.logoutBtn} className="logout-hover">Sign out</button>
+          </div>
         </div>
+      </div>
 
-        {/* Card */}
-        <div style={{ background:"rgba(15,23,42,0.8)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:"16px", padding:"36px" }}>
-          {/* Role badge + name */}
-          <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:"28px" }}>
-            <div>
-              <p style={{ fontSize:"12px", color:"#475569", marginBottom:"6px", textTransform:"uppercase", letterSpacing:"1px" }}>Welcome back</p>
-              <h1 style={{ fontFamily:"'Barlow Condensed', sans-serif", fontSize:"28px", fontWeight:"700", color:"#F1F5F9", letterSpacing:"0.3px" }}>{user?.full_name}</h1>
+      {/* Main */}
+      <div style={ds.main}>
+        <div style={ds.content}>
+
+          {/* Profile card */}
+          <div style={ds.profileCard}>
+            {/* Cover */}
+            <div style={ds.cover} />
+            {/* Avatar */}
+            <div style={ds.avatarWrap}>
+              <div style={ds.avatar}>
+                {user?.full_name?.charAt(0).toUpperCase()}
+              </div>
             </div>
-            <span style={{ fontSize:"11px", fontWeight:"600", padding:"5px 12px", borderRadius:"20px", background:roleConf.bg, border:`1px solid ${roleConf.border}`, color:roleConf.color, letterSpacing:"0.5px", textTransform:"uppercase", marginTop:"4px" }}>
-              {roleConf.label}
-            </span>
+            <div style={ds.profileInfo}>
+              <div style={ds.profileTop}>
+                <div>
+                  <h1 style={ds.profileName}>{user?.full_name}</h1>
+                  <span style={{fontSize:"12px", fontWeight:"600", padding:"4px 10px", borderRadius:"12px", backgroundColor:roleConf.bg, border:`1px solid ${roleConf.border}`, color:roleConf.color}}>
+                    {roleConf.label}
+                  </span>
+                </div>
+              </div>
+              <div style={ds.profileDetails}>
+                <div style={ds.detailRow}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6.6 10.8C7.8 13.2 9.8 15.2 12.2 16.4L14 14.6C14.2 14.4 14.6 14.4 14.8 14.5C15.8 14.9 16.9 15.1 18 15.1C18.6 15.1 19 15.5 19 16.1V19C19 19.6 18.6 20 18 20C9.2 20 2 12.8 2 4C2 3.4 2.4 3 3 3H6C6.6 3 7 3.4 7 4C7 5.1 7.2 6.2 7.6 7.2C7.7 7.5 7.6 7.8 7.4 8L5.6 9.8C6 10.2 6.3 10.5 6.6 10.8Z" fill="#666"/></svg>
+                  <span style={ds.detailText}>{user?.phone}</span>
+                </div>
+                {user?.email && (
+                  <div style={ds.detailRow}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4Z" stroke="#666" strokeWidth="2"/><path d="M22 6L12 13L2 6" stroke="#666" strokeWidth="2"/></svg>
+                    <span style={ds.detailText}>{user?.email}</span>
+                  </div>
+                )}
+                <div style={ds.detailRow}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="#666" strokeWidth="2"/><path d="M16 2V6M8 2V6M3 10H21" stroke="#666" strokeWidth="2" strokeLinecap="round"/></svg>
+                  <span style={ds.detailText}>Member since {new Date(user?.created_at).toLocaleDateString("en-IN", { day:"numeric", month:"long", year:"numeric" })}</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Info rows */}
-          <div style={{ display:"flex", flexDirection:"column", gap:"12px", marginBottom:"32px" }}>
-            {[["Phone", user?.phone], ["Email", user?.email || "—"], ["Member since", new Date(user?.created_at).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" })]].map(([label, val]) => (
-              <div key={label} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"12px 16px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.05)", borderRadius:"8px" }}>
-                <span style={{ fontSize:"12px", color:"#475569", textTransform:"uppercase", letterSpacing:"0.5px" }}>{label}</span>
-                <span style={{ fontSize:"14px", color:"#94A3B8", fontWeight:"500" }}>{val}</span>
+          {/* Phase 2 coming soon cards */}
+          <div style={ds.sectionTitle}>What's coming in Phase 2</div>
+          <div style={ds.cardsGrid}>
+            {[
+              { icon:"⏱️", title:"Clock In / Out", desc:"Track your daily attendance with one tap.", roles:["worker","team_lead"] },
+              { icon:"📊", title:"Attendance History", desc:"View your full shift history and hours.", roles:["worker","team_lead"] },
+              { icon:"👥", title:"Team Management", desc:"See your team's attendance and performance.", roles:["team_lead","admin"] },
+              { icon:"🔗", title:"Invite Generator", desc:"Generate invite links for new members.", roles:["admin"] },
+            ].map(({ icon, title, desc, roles }) => (
+              <div key={title} style={ds.featureCard}>
+                <div style={ds.featureCardIcon}>{icon}</div>
+                <div>
+                  <div style={ds.featureCardTitle}>{title}</div>
+                  <div style={ds.featureCardDesc}>{desc}</div>
+                  <div style={{display:"flex", gap:"6px", marginTop:"10px", flexWrap:"wrap"}}>
+                    {roles.map(r => {
+                      const rc = ROLE_CONFIG[r];
+                      return rc ? (
+                        <span key={r} style={{fontSize:"11px", padding:"2px 8px", borderRadius:"10px", backgroundColor:rc.bg, border:`1px solid ${rc.border}`, color:rc.color, fontWeight:"600"}}>
+                          {rc.label}
+                        </span>
+                      ) : null;
+                    })}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
 
-          {/* Phase 2 coming soon */}
-          <div style={{ padding:"16px", background:"rgba(245,158,11,0.04)", border:"1px dashed rgba(245,158,11,0.15)", borderRadius:"10px", marginBottom:"24px", textAlign:"center" }}>
-            <p style={{ fontSize:"12px", color:"#64748B" }}>
-              📋 <span style={{ color:"#F59E0B" }}>Phase 2 coming soon</span> — Clock in/out, attendance, team management
-            </p>
-          </div>
-
-          <button onClick={logout} style={{ width:"100%", padding:"13px", background:"transparent", color:"#F87171", border:"1px solid rgba(248,113,113,0.2)", borderRadius:"10px", fontSize:"14px", fontWeight:"600", fontFamily:"'Barlow', sans-serif", cursor:"pointer", transition:"all 0.2s", letterSpacing:"0.3px" }}>
-            Sign out
-          </button>
         </div>
       </div>
 
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap');`}</style>
+      {/* Footer */}
+      <div style={ds.footer}>
+        {["About", "Help Center", "Privacy", "Terms", "© 2025 Builder"].map(item => (
+          <span key={item} style={ds.footerItem}>{item}</span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -121,21 +174,53 @@ function Dashboard() {
 function Unauthorized() {
   const navigate = useNavigate();
   return (
-    <div style={{ minHeight:"100vh", backgroundColor:"#080E1A", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Barlow', sans-serif" }}>
-      <div style={{ background:"rgba(15,23,42,0.8)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:"16px", padding:"40px", textAlign:"center", maxWidth:"380px" }}>
-        <h1 style={{ fontFamily:"'Barlow Condensed', sans-serif", fontSize:"26px", fontWeight:"700", color:"#F1F5F9", marginBottom:"8px" }}>Access Denied</h1>
-        <p style={{ fontSize:"14px", color:"#475569", marginBottom:"24px" }}>You don't have permission to view this page.</p>
-        <button onClick={() => window.history.back()} style={{ padding:"10px 24px", background:"#F59E0B", color:"#0F172A", border:"none", borderRadius:"8px", fontSize:"14px", fontWeight:"600", cursor:"pointer", fontFamily:"'Barlow', sans-serif" }}>Go back</button>
+    <div style={{minHeight:"100vh", backgroundColor:"#F3F2EF", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter', sans-serif"}}>
+      <div style={{backgroundColor:"#FFFFFF", borderRadius:"8px", boxShadow:"0 0 0 1px rgba(0,0,0,0.08)", padding:"40px", textAlign:"center", maxWidth:"380px"}}>
+        <h1 style={{fontSize:"22px", fontWeight:"700", color:"#000000E6", marginBottom:"8px"}}>Access Denied</h1>
+        <p style={{fontSize:"14px", color:"#666", marginBottom:"24px"}}>You don't have permission to view this page.</p>
+        <button onClick={() => navigate("/dashboard")} style={{padding:"10px 24px", backgroundColor:"#0A66C2", color:"#FFFFFF", border:"none", borderRadius:"24px", fontSize:"14px", fontWeight:"600", cursor:"pointer", fontFamily:"'Inter', sans-serif"}}>Go to dashboard</button>
       </div>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap');`}</style>
     </div>
   );
 }
 
-// Need useNavigate inside BrowserRouter so define here
-function useNavigate() {
-  return (path) => window.location.href = path;
-}
+const css = `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+  .logout-hover:hover { background: #F3F2EF !important; color: #CC1016 !important; }
+  * { box-sizing: border-box; }
+`;
+
+const ds = {
+  root: { minHeight:"100vh", backgroundColor:"#F3F2EF", fontFamily:"'Inter', sans-serif", display:"flex", flexDirection:"column" },
+  navbar: { backgroundColor:"#FFFFFF", borderBottom:"1px solid #E0DFDC", position:"sticky", top:0, zIndex:100 },
+  navInner: { maxWidth:"1128px", margin:"0 auto", padding:"12px 24px", display:"flex", alignItems:"center", justifyContent:"space-between" },
+  navLogo: { display:"flex", alignItems:"center", gap:"8px" },
+  navBrand: { fontSize:"20px", fontWeight:"700", color:"#0A66C2", letterSpacing:"-0.3px" },
+  navRight: { display:"flex", alignItems:"center", gap:"16px" },
+  navName: { fontSize:"14px", fontWeight:"600", color:"#333" },
+  logoutBtn: { padding:"8px 18px", backgroundColor:"transparent", color:"#666", border:"1px solid #C9C5C0", borderRadius:"24px", fontSize:"14px", fontWeight:"600", cursor:"pointer", fontFamily:"'Inter', sans-serif", transition:"all 0.15s" },
+  main: { flex:1, maxWidth:"1128px", margin:"0 auto", padding:"24px 24px", width:"100%" },
+  content: { maxWidth:"720px" },
+  profileCard: { backgroundColor:"#FFFFFF", borderRadius:"8px", boxShadow:"0 0 0 1px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)", marginBottom:"16px", overflow:"hidden", animation:"fadeUp 0.35s ease forwards" },
+  cover: { height:"120px", background:"linear-gradient(135deg, #0A66C2 0%, #004182 100%)" },
+  avatarWrap: { padding:"0 24px" },
+  avatar: { width:"80px", height:"80px", borderRadius:"50%", backgroundColor:"#0A66C2", border:"4px solid #FFFFFF", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"28px", fontWeight:"700", color:"#FFFFFF", marginTop:"-40px" },
+  profileInfo: { padding:"12px 24px 24px" },
+  profileTop: { display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:"16px" },
+  profileName: { fontSize:"22px", fontWeight:"700", color:"#000000E6", marginBottom:"8px" },
+  profileDetails: { display:"flex", flexDirection:"column", gap:"8px" },
+  detailRow: { display:"flex", alignItems:"center", gap:"8px" },
+  detailText: { fontSize:"14px", color:"#555" },
+  sectionTitle: { fontSize:"16px", fontWeight:"700", color:"#000000E6", marginBottom:"12px", marginTop:"8px" },
+  cardsGrid: { display:"grid", gridTemplateColumns:"1fr 1fr", gap:"12px" },
+  featureCard: { backgroundColor:"#FFFFFF", borderRadius:"8px", boxShadow:"0 0 0 1px rgba(0,0,0,0.08)", padding:"20px", display:"flex", gap:"14px", alignItems:"flex-start" },
+  featureCardIcon: { fontSize:"24px", flexShrink:0 },
+  featureCardTitle: { fontSize:"15px", fontWeight:"600", color:"#000000E6", marginBottom:"4px" },
+  featureCardDesc: { fontSize:"13px", color:"#666", lineHeight:"1.5" },
+  footer: { borderTop:"1px solid #E0DFDC", backgroundColor:"#FFFFFF", padding:"16px 24px", display:"flex", flexWrap:"wrap", gap:"16px", justifyContent:"center", marginTop:"auto" },
+  footerItem: { fontSize:"12px", color:"#666", cursor:"pointer" },
+};
 
 export default function App() {
   return (
