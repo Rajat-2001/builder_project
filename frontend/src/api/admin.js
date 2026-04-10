@@ -177,3 +177,16 @@ export async function updateSection(projectId, sectionId, data) {
   );
   return handleResponse(res);
 }
+
+
+/**
+ * Get total hours this month for all users
+ * GET /admin/hours
+ */
+export async function getAllHours() {
+  const res = await fetch(`${BASE_URL}/admin/hours`, {
+    method: "GET",
+    headers: authHeaders(),
+  });
+  return handleResponse(res);
+}

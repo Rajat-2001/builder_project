@@ -356,3 +356,36 @@ def update_section(
 
     db.commit()
     return {"message": f"Section '{section.section_name}' updated to {section.percentage}%."}
+
+
+# ─────────────────────────────────────────
+# GET /admin/hours
+# Returns total hours this month for every user
+# ─────────────────────────────────────────
+
+@router.get("/hours")
+def get_all_hours(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin"))
+):
+    """
+    Returns a dict of user_id → total hours this month.
+    Admin dashboard merges this with the users list.
+    Only counts completed shifts (is_active = False).
+    """
+    from app.models.attendance import Attendance
+
+    month = datetime.now(timezone.utc).strftime("%Y-%m")
+
+    records = db.query(Attendance).filter(
+        Attendance.is_active  == False,
+        Attendance.shift_date.like(f"{month}%")
+    ).all()
+
+    # Sum hours per user
+    hours_map = {}
+    for r in records:
+        uid = str(r.user_id)
+        hours_map[uid] = round(hours_map.get(uid, 0) + (r.total_hours or 0), 2)
+
+    return hours_map

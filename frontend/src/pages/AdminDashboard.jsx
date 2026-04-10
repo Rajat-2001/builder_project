@@ -4,6 +4,7 @@ import {
   getAllUsers, createUser, toggleUserActive, deleteUser,
   createInvite, getAllInvites,
   getAllProjects, createProject,
+  getAllHours,
 } from "../api/admin";
 
 const ROLE_CONFIG = {
@@ -24,6 +25,7 @@ export default function AdminDashboard() {
   // Users state
   const [users,        setUsers]        = useState([]);
   const [usersLoading, setUsersLoading] = useState(true);
+  const [hoursMap,     setHoursMap]     = useState({});
   const [roleFilter,   setRoleFilter]   = useState("all");
   const [showAddUser,  setShowAddUser]  = useState(false);
   const [newUser,      setNewUser]      = useState({ full_name:"", phone:"", password:"", role:"worker", email:"" });
@@ -52,8 +54,9 @@ export default function AdminDashboard() {
   const loadUsers = async () => {
     setUsersLoading(true);
     try {
-      const data = await getAllUsers();
+      const [data, hours] = await Promise.all([getAllUsers(), getAllHours()]);
       setUsers(data);
+      setHoursMap(hours);
     } catch (err) {
       setUserMsg(err.message);
     } finally {
@@ -355,6 +358,9 @@ export default function AdminDashboard() {
                       <th style={s.th}>Role</th>
                       <th style={s.th}>Status</th>
                       <th style={s.th}>Joined</th>
+                      {["worker","team_lead","architect"].includes(roleFilter) && (
+                        <th style={s.th}>Hours (this month)</th>
+                      )}
                       <th style={s.th}>Actions</th>
                     </tr>
                   </thead>
@@ -384,6 +390,11 @@ export default function AdminDashboard() {
                             </span>
                           </td>
                           <td style={s.td}>{new Date(u.created_at).toLocaleDateString("en-IN", {day:"numeric", month:"short", year:"numeric"})}</td>
+                          {["worker","team_lead","architect"].includes(roleFilter) && (
+                            <td style={s.td}>
+                              <span style={{fontWeight:"600", color:"#0A66C2"}}>{hoursMap[u.id] || 0}h</span>
+                            </td>
+                          )}
                           <td style={s.td}>
                             <div style={{display:"flex", gap:"8px"}}>
                               {u.role !== "admin" && (
