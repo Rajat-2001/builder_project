@@ -8,15 +8,16 @@ import {
 } from "../api/admin";
 
 const ROLE_CONFIG = {
-  admin:     { label:"Administrator", color:"#0A66C2", bg:"#EEF3FB", border:"#C0D7F5" },
-  team_lead: { label:"Team Leader",   color:"#057642", bg:"#F0FAF5", border:"#B8DFC9" },
-  worker:    { label:"Worker",        color:"#7A3E00", bg:"#FDF3E7", border:"#F0C98A" },
-  architect: { label:"Architect",     color:"#6B3FA0", bg:"#F5EFFC", border:"#D4AFEF" },
-  customer:  { label:"Customer",      color:"#B24020", bg:"#FDF0EC", border:"#F5C2B0" },
+  admin:      { label:"Administrator", color:"#0A66C2", bg:"#EEF3FB", border:"#C0D7F5" },
+  team_lead:  { label:"Team Leader",   color:"#057642", bg:"#F0FAF5", border:"#B8DFC9" },
+  worker:     { label:"Worker",        color:"#7A3E00", bg:"#FDF3E7", border:"#F0C98A" },
+  architect:  { label:"Architect",     color:"#6B3FA0", bg:"#F5EFFC", border:"#D4AFEF" },
+  customer:   { label:"Customer",      color:"#B24020", bg:"#FDF0EC", border:"#F5C2B0" },
+  supervisor: { label:"Supervisor",    color:"#185FA5", bg:"#E6F1FB", border:"#B5D4F4" },
 };
 
 // Roles admin creates directly — customers use invite link
-const DIRECT_ROLES = ["team_lead", "worker", "architect"];
+const DIRECT_ROLES = ["team_lead", "worker", "architect", "supervisor"];
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
@@ -328,7 +329,7 @@ export default function AdminDashboard() {
 
             {/* Role filter pills */}
             <div style={s.filterRow}>
-              {[["all","All"], ["admin","Admin"], ["team_lead","Team Leaders"], ["worker","Workers"], ["architect","Architects"], ["customer","Customers"]].map(([val, label]) => (
+              {[["all","All"], ["admin","Admin"], ["team_lead","Team Leaders"], ["worker","Workers"], ["architect","Architects"], ["supervisor","Supervisors"], ["customer","Customers"]].map(([val, label]) => (
                 <button
                   key={val}
                   onClick={() => setRoleFilter(val)}
@@ -358,7 +359,7 @@ export default function AdminDashboard() {
                       <th style={s.th}>Role</th>
                       <th style={s.th}>Status</th>
                       <th style={s.th}>Joined</th>
-                      {["worker","team_lead","architect"].includes(roleFilter) && (
+                      {["worker","team_lead","architect","supervisor"].includes(roleFilter) && (
                         <th style={s.th}>Hours (this month)</th>
                       )}
                       <th style={s.th}>Actions</th>

@@ -493,7 +493,12 @@ export default function TeamLeadDashboard() {
     fetch("http://localhost:8000/projects/all", {
       headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
     }).then(r => r.json()).then(data => {
-      const list = Array.isArray(data) ? data : [];
+      const seen = new Set();
+      const list = (Array.isArray(data) ? data : []).filter(p => {
+        if (seen.has(p.id)) return false;
+        seen.add(p.id);
+        return true;
+      });
       setProjects(list);
       if (list.length > 0) setSelectedProject(list[0]);
     }).catch(() => {});

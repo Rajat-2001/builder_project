@@ -303,6 +303,7 @@ def team_reports(
         result.append({
             "session_id": s.id,
             "worker": worker.full_name if worker else "Unknown",
+            "worker_role": worker.role if worker else "unknown",
             "worker_id": s.user_id,
             "session_date": s.session_date,
             "clock_in": s.clock_in,
