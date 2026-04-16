@@ -239,24 +239,129 @@
 //   );
 // }
 
+// import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+// import { useAuth } from "./context/AuthContext";
+
+// // Pages
+// import Login             from "./pages/Login";
+// import Join              from "./pages/Join";
+// import AdminDashboard    from "./pages/AdminDashboard";
+// import WorkerDashboard   from "./pages/WorkerDashboard";
+// import TeamLeadDashboard from "./pages/TeamLeadDashboard";
+// import CustomerDashboard from "./pages/CustomerDashboard";
+
+// // Guards
+// import ProtectedRoute from "./components/ProtectedRoute";
+
+
+// // ── Smart redirect based on role ──
+// // Called when user hits "/" or "/dashboard"
+// // Sends each role to their own page
+// function RoleRedirect() {
+//   const { user, loading } = useAuth();
+
+//   if (loading) return (
+//     <div style={{ minHeight:"100vh", backgroundColor:"#F3F2EF", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter', sans-serif" }}>
+//       <p style={{ color:"#666", fontSize:"14px" }}>Loading...</p>
+//     </div>
+//   );
+
+//   if (!user) return <Navigate to="/login" replace />;
+
+//   switch (user.role) {
+//     case "admin":     return <Navigate to="/admin"    replace />;
+//     case "team_lead": return <Navigate to="/team"     replace />;
+//     case "worker":    return <Navigate to="/worker"   replace />;
+//     case "customer":  return <Navigate to="/customer" replace />;
+//     case "architect": return <Navigate to="/team"     replace />; // architect → team lead view for now
+//     default:          return <Navigate to="/login"    replace />;
+//   }
+// }
+
+
+// // ── Unauthorized page ──
+// function Unauthorized() {
+//   return (
+//     <div style={{ minHeight:"100vh", backgroundColor:"#F3F2EF", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter', sans-serif" }}>
+//       <div style={{ backgroundColor:"#FFFFFF", borderRadius:"8px", boxShadow:"0 0 0 1px rgba(0,0,0,0.08)", padding:"40px", textAlign:"center", maxWidth:"380px" }}>
+//         <div style={{ fontSize:"48px", marginBottom:"16px" }}>🚫</div>
+//         <h1 style={{ fontSize:"22px", fontWeight:"700", color:"#000000E6", marginBottom:"8px", fontFamily:"'Inter', sans-serif" }}>
+//           Access Denied
+//         </h1>
+//         <p style={{ fontSize:"14px", color:"#666", marginBottom:"24px", lineHeight:"1.6" }}>
+//           You don't have permission to view this page.
+//         </p>
+//         <a href="/dashboard" style={{ padding:"10px 24px", backgroundColor:"#0A66C2", color:"#FFFFFF", border:"none", borderRadius:"24px", fontSize:"14px", fontWeight:"600", cursor:"pointer", fontFamily:"'Inter', sans-serif", textDecoration:"none" }}>
+//           Go to my dashboard
+//         </a>
+//       </div>
+//       <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');`}</style>
+//     </div>
+//   );
+// }
+
+
+// export default function App() {
+//   return (
+//     <BrowserRouter>
+//       <Routes>
+
+//         {/* ── Public routes ── */}
+//         <Route path="/login" element={<Login />} />
+//         <Route path="/join"  element={<Join />} />
+
+//         {/* ── Smart role redirect ── */}
+//         <Route path="/"          element={<RoleRedirect />} />
+//         <Route path="/dashboard" element={<RoleRedirect />} />
+
+//         {/* ── Admin only ── */}
+//         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+//           <Route path="/admin" element={<AdminDashboard />} />
+//         </Route>
+
+//         {/* ── Worker only ── */}
+//         <Route element={<ProtectedRoute allowedRoles={["worker"]} />}>
+//           <Route path="/worker" element={<WorkerDashboard />} />
+//         </Route>
+
+//         {/* ── Team Lead + Architect ── */}
+//         <Route element={<ProtectedRoute allowedRoles={["team_lead", "architect"]} />}>
+//           <Route path="/team" element={<TeamLeadDashboard />} />
+//         </Route>
+
+//         {/* ── Customer only ── */}
+//         <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
+//           <Route path="/customer" element={<CustomerDashboard />} />
+//         </Route>
+
+//         {/* ── Utility routes ── */}
+//         <Route path="/unauthorized" element={<Unauthorized />} />
+
+//         {/* ── 404 fallback ── */}
+//         <Route path="*" element={<RoleRedirect />} />
+
+//       </Routes>
+//     </BrowserRouter>
+//   );
+// }
+
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 
 // Pages
-import Login             from "./pages/Login";
-import Join              from "./pages/Join";
-import AdminDashboard    from "./pages/AdminDashboard";
-import WorkerDashboard   from "./pages/WorkerDashboard";
-import TeamLeadDashboard from "./pages/TeamLeadDashboard";
-import CustomerDashboard from "./pages/CustomerDashboard";
+import Login               from "./pages/Login";
+import Join                from "./pages/Join";
+import AdminDashboard      from "./pages/AdminDashboard";
+import WorkerDashboard     from "./pages/WorkerDashboard";
+import TeamLeadDashboard   from "./pages/TeamLeadDashboard";
+import SupervisorDashboard from "./pages/SupervisorDashboard";
+import ArchitectDashboard  from "./pages/ArchitectDashboard";
+import CustomerDashboard   from "./pages/CustomerDashboard";
 
 // Guards
 import ProtectedRoute from "./components/ProtectedRoute";
 
 
-// ── Smart redirect based on role ──
-// Called when user hits "/" or "/dashboard"
-// Sends each role to their own page
 function RoleRedirect() {
   const { user, loading } = useAuth();
 
@@ -269,17 +374,17 @@ function RoleRedirect() {
   if (!user) return <Navigate to="/login" replace />;
 
   switch (user.role) {
-    case "admin":     return <Navigate to="/admin"    replace />;
-    case "team_lead": return <Navigate to="/team"     replace />;
-    case "worker":    return <Navigate to="/worker"   replace />;
-    case "customer":  return <Navigate to="/customer" replace />;
-    case "architect": return <Navigate to="/team"     replace />; // architect → team lead view for now
-    default:          return <Navigate to="/login"    replace />;
+    case "admin":      return <Navigate to="/admin"      replace />;
+    case "team_lead":  return <Navigate to="/team"       replace />;
+    case "worker":     return <Navigate to="/worker"     replace />;
+    case "customer":   return <Navigate to="/customer"   replace />;
+    case "architect":  return <Navigate to="/architect"  replace />;
+    case "supervisor": return <Navigate to="/supervisor" replace />;
+    default:           return <Navigate to="/login"      replace />;
   }
 }
 
 
-// ── Unauthorized page ──
 function Unauthorized() {
   return (
     <div style={{ minHeight:"100vh", backgroundColor:"#F3F2EF", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter', sans-serif" }}>
@@ -306,39 +411,47 @@ export default function App() {
     <BrowserRouter>
       <Routes>
 
-        {/* ── Public routes ── */}
+        {/* Public */}
         <Route path="/login" element={<Login />} />
         <Route path="/join"  element={<Join />} />
 
-        {/* ── Smart role redirect ── */}
+        {/* Smart role redirect */}
         <Route path="/"          element={<RoleRedirect />} />
         <Route path="/dashboard" element={<RoleRedirect />} />
 
-        {/* ── Admin only ── */}
+        {/* Admin */}
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           <Route path="/admin" element={<AdminDashboard />} />
         </Route>
 
-        {/* ── Worker only ── */}
+        {/* Worker */}
         <Route element={<ProtectedRoute allowedRoles={["worker"]} />}>
           <Route path="/worker" element={<WorkerDashboard />} />
         </Route>
 
-        {/* ── Team Lead + Architect ── */}
-        <Route element={<ProtectedRoute allowedRoles={["team_lead", "architect"]} />}>
+        {/* Team Lead */}
+        <Route element={<ProtectedRoute allowedRoles={["team_lead"]} />}>
           <Route path="/team" element={<TeamLeadDashboard />} />
         </Route>
 
-        {/* ── Customer only ── */}
+        {/* Supervisor */}
+        <Route element={<ProtectedRoute allowedRoles={["supervisor"]} />}>
+          <Route path="/supervisor" element={<SupervisorDashboard />} />
+        </Route>
+
+        {/* Architect */}
+        <Route element={<ProtectedRoute allowedRoles={["architect"]} />}>
+          <Route path="/architect" element={<ArchitectDashboard />} />
+        </Route>
+
+        {/* Customer */}
         <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
           <Route path="/customer" element={<CustomerDashboard />} />
         </Route>
 
-        {/* ── Utility routes ── */}
+        {/* Utility */}
         <Route path="/unauthorized" element={<Unauthorized />} />
-
-        {/* ── 404 fallback ── */}
-        <Route path="*" element={<RoleRedirect />} />
+        <Route path="*"             element={<RoleRedirect />} />
 
       </Routes>
     </BrowserRouter>
