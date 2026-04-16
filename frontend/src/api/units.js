@@ -76,3 +76,14 @@ export const deleteUnitTask = async (taskId) => {
   if (!res.ok) throw new Error("Failed to delete task");
   return res.json();
 };
+
+// Update unit notes
+export const updateUnitNotes = async (unitId, notes) => {
+  const res = await fetch(`${BASE}/units/${unitId}/notes`, {
+    method: "PATCH",
+    headers: authHeaders(),
+    body: JSON.stringify({ notes }),
+  });
+  if (!res.ok) throw new Error("Failed to update notes");
+  return res.json();
+};

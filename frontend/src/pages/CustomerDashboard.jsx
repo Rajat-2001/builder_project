@@ -1,381 +1,603 @@
+// import { useState, useEffect } from "react";
+// import { useAuth } from "../context/AuthContext";
+// import { getMyProjects } from "../api/attendance";
+
+// // ── Pure SVG Pie Chart ──
+// function PieChart({ percentage, color = "#0A66C2", size = 120 }) {
+//   const radius     = 45;
+//   const cx         = size / 2;
+//   const cy         = size / 2;
+//   const circumference = 2 * Math.PI * radius;
+//   const filled     = (percentage / 100) * circumference;
+//   const empty      = circumference - filled;
+
+//   // Convert percentage to arc path
+//   const angle      = (percentage / 100) * 360;
+//   const rad        = (angle - 90) * (Math.PI / 180);
+//   const x          = cx + radius * Math.cos(rad);
+//   const y          = cy + radius * Math.sin(rad);
+//   const largeArc   = angle > 180 ? 1 : 0;
+
+//   const pathData = percentage >= 100
+//     ? `M ${cx} ${cy - radius} A ${radius} ${radius} 0 1 1 ${cx - 0.001} ${cy - radius} Z`
+//     : percentage <= 0
+//     ? ""
+//     : `M ${cx} ${cy - radius} A ${radius} ${radius} 0 ${largeArc} 1 ${x} ${y} L ${cx} ${cy} Z`;
+
+//   return (
+//     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+//       {/* Background circle */}
+//       <circle cx={cx} cy={cy} r={radius} fill="#F3F2EF" stroke="#E0DFDC" strokeWidth="1"/>
+//       {/* Filled arc */}
+//       {percentage > 0 && (
+//         <path d={pathData} fill={color} opacity="0.9"/>
+//       )}
+//       {/* Center white circle — donut effect */}
+//       <circle cx={cx} cy={cy} r={radius * 0.6} fill="#FFFFFF"/>
+//       {/* Percentage text */}
+//       <text
+//         x={cx} y={cy + 1}
+//         textAnchor="middle"
+//         dominantBaseline="middle"
+//         fontSize="16"
+//         fontWeight="700"
+//         fill="#000000E6"
+//         fontFamily="Inter, sans-serif"
+//       >
+//         {Math.round(percentage)}%
+//       </text>
+//     </svg>
+//   );
+// }
+
+// // Status config
+// const STATUS_CONFIG = {
+//   planning:    { label:"Planning",    color:"#666",    bg:"#F3F2EF", border:"#D0CFC9" },
+//   in_progress: { label:"In Progress", color:"#0A66C2", bg:"#EEF3FB", border:"#C0D7F5" },
+//   on_hold:     { label:"On Hold",     color:"#CC1016", bg:"#FFF0F0", border:"#FFCCCC" },
+//   completed:   { label:"Completed",   color:"#057642", bg:"#F0FAF5", border:"#B8DFC9" },
+// };
+
+// // Section colors — cycles through these for multiple sections
+// const SECTION_COLORS = [
+//   "#0A66C2", "#057642", "#7A3E00", "#6B3FA0",
+//   "#B24020", "#0F6E56", "#185FA5", "#3B6D11",
+// ];
+
+// export default function CustomerDashboard() {
+//   const { user, logout } = useAuth();
+
+//   const [projects, setProjects] = useState([]);
+//   const [loading,  setLoading]  = useState(true);
+//   const [error,    setError]    = useState("");
+//   const [selected, setSelected] = useState(0); // index of selected project
+
+//   useEffect(() => {
+//     loadProjects();
+//   }, []);
+
+//   const loadProjects = async () => {
+//     setLoading(true);
+//     try {
+//       const data = await getMyProjects();
+//       setProjects(data.projects || []);
+//     } catch (err) {
+//       setError(err.message);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const project = projects[selected];
+
+//   return (
+//     <div style={s.root}>
+//       <style>{css}</style>
+
+//       {/* Navbar */}
+//       <div style={s.navbar}>
+//         <div style={s.navInner}>
+//           <div style={s.navLogo}>
+//             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+//               <path d="M3 21V8L12 3L21 8V21" stroke="#0A66C2" strokeWidth="2.5" strokeLinejoin="round"/>
+//               <path d="M9 21V14H15V21" stroke="#0A66C2" strokeWidth="2.5" strokeLinejoin="round"/>
+//             </svg>
+//             <span style={s.navBrand}>Builder</span>
+//           </div>
+//           <div style={s.navRight}>
+//             <span style={s.navName}>{user?.full_name}</span>
+//             <span style={s.badge}>Customer</span>
+//             <button onClick={logout} style={s.logoutBtn} className="logout-hover">Sign out</button>
+//           </div>
+//         </div>
+//       </div>
+
+//       <div style={s.main}>
+
+//         {/* Page header */}
+//         <div style={s.pageHeader}>
+//           <h1 style={s.pageTitle}>My Projects</h1>
+//           <p style={s.pageSub}>Track the progress of your construction projects</p>
+//         </div>
+
+//         {loading && (
+//           <div style={s.loadingCard}>
+//             <p style={{color:"#666", fontSize:"14px"}}>Loading your projects...</p>
+//           </div>
+//         )}
+
+//         {error && (
+//           <div style={s.errorCard}>{error}</div>
+//         )}
+
+//         {!loading && projects.length === 0 && (
+//           <div style={s.emptyCard}>
+//             <span style={{fontSize:"48px"}}>🏗️</span>
+//             <h2 style={{fontSize:"18px", fontWeight:"700", color:"#000000E6", marginTop:"16px", marginBottom:"8px"}}>
+//               No projects yet
+//             </h2>
+//             <p style={{fontSize:"14px", color:"#666"}}>
+//               Your project manager hasn't assigned any projects to your account yet.
+//               Please contact them for more information.
+//             </p>
+//           </div>
+//         )}
+
+//         {!loading && projects.length > 0 && (
+//           <>
+//             {/* Project selector — if multiple projects */}
+//             {projects.length > 1 && (
+//               <div style={s.projectTabs}>
+//                 {projects.map((p, i) => (
+//                   <button
+//                     key={p.id}
+//                     onClick={() => setSelected(i)}
+//                     style={{...s.projectTab, ...(selected === i ? s.projectTabActive : {})}}
+//                   >
+//                     {p.name}
+//                   </button>
+//                 ))}
+//               </div>
+//             )}
+
+//             {project && (
+//               <div style={{display:"flex", flexDirection:"column", gap:"20px", animation:"fadeIn 0.3s ease"}}>
+
+//                 {/* Project overview card */}
+//                 <div style={s.overviewCard}>
+//                   <div style={s.overviewLeft}>
+//                     <div style={s.overviewTop}>
+//                       <h2 style={s.projectName}>{project.name}</h2>
+//                       {project.status && STATUS_CONFIG[project.status] && (
+//                         <span style={{
+//                           fontSize:"12px", fontWeight:"600", padding:"4px 12px",
+//                           borderRadius:"12px",
+//                           backgroundColor: STATUS_CONFIG[project.status].bg,
+//                           border: `1px solid ${STATUS_CONFIG[project.status].border}`,
+//                           color: STATUS_CONFIG[project.status].color,
+//                         }}>
+//                           {STATUS_CONFIG[project.status].label}
+//                         </span>
+//                       )}
+//                     </div>
+
+//                     {project.description && (
+//                       <p style={s.projectDesc}>{project.description}</p>
+//                     )}
+
+//                     {/* Timeline */}
+//                     {(project.start_date || project.end_date) && (
+//                       <div style={s.timeline}>
+//                         {project.start_date && (
+//                           <div style={s.timelineItem}>
+//                             <span style={s.timelineLabel}>Started</span>
+//                             <span style={s.timelineValue}>{project.start_date}</span>
+//                           </div>
+//                         )}
+//                         {project.end_date && (
+//                           <div style={s.timelineItem}>
+//                             <span style={s.timelineLabel}>Expected completion</span>
+//                             <span style={s.timelineValue}>{project.end_date}</span>
+//                           </div>
+//                         )}
+//                       </div>
+//                     )}
+
+//                     {/* Overall progress bar */}
+//                     <div style={s.overallProgress}>
+//                       <div style={s.progressHeader}>
+//                         <span style={s.progressLabel}>Overall completion</span>
+//                         <span style={s.progressValue}>{project.overall_progress}%</span>
+//                       </div>
+//                       <div style={s.progressTrack}>
+//                         <div style={{
+//                           ...s.progressFill,
+//                           width: `${project.overall_progress}%`,
+//                           backgroundColor: project.overall_progress >= 100
+//                             ? "#057642"
+//                             : project.overall_progress >= 50
+//                             ? "#0A66C2"
+//                             : "#F59E0B",
+//                         }}/>
+//                       </div>
+//                       <div style={s.progressFooter}>
+//                         <span style={{fontSize:"12px", color:"#666"}}>
+//                           {project.overall_progress >= 100
+//                             ? "🎉 Project complete!"
+//                             : `${100 - project.overall_progress}% remaining`}
+//                         </span>
+//                         {project.updated_at && (
+//                           <span style={{fontSize:"12px", color:"#999"}}>
+//                             Updated {new Date(project.updated_at).toLocaleDateString("en-IN", {day:"numeric", month:"short"})}
+//                           </span>
+//                         )}
+//                       </div>
+//                     </div>
+//                   </div>
+
+//                   {/* Big donut chart for overall */}
+//                   <div style={s.overviewRight}>
+//                     <PieChart
+//                       percentage={project.overall_progress}
+//                       color={project.overall_progress >= 100 ? "#057642" : "#0A66C2"}
+//                       size={160}
+//                     />
+//                     <p style={{fontSize:"12px", color:"#666", marginTop:"8px", textAlign:"center"}}>
+//                       Overall progress
+//                     </p>
+//                   </div>
+//                 </div>
+
+//                 {/* Sections grid */}
+//                 {project.sections && project.sections.length > 0 && (
+//                   <>
+//                     <h2 style={s.sectionHeading}>Section Breakdown</h2>
+//                     <div style={s.sectionsGrid}>
+//                       {project.sections.map((section, i) => {
+//                         const color = SECTION_COLORS[i % SECTION_COLORS.length];
+//                         return (
+//                           <div key={i} style={s.sectionCard}>
+//                             <div style={s.sectionCardTop}>
+//                               <PieChart
+//                                 percentage={section.percentage}
+//                                 color={color}
+//                                 size={100}
+//                               />
+//                               <div style={s.sectionInfo}>
+//                                 <h3 style={s.sectionName}>{section.section_name}</h3>
+//                                 <div style={s.sectionStats}>
+//                                   <div style={s.sectionStat}>
+//                                     <span style={{...s.sectionStatDot, backgroundColor:color}}/>
+//                                     <span style={{fontSize:"12px", color:"#333"}}>Done: <strong>{section.percentage}%</strong></span>
+//                                   </div>
+//                                   <div style={s.sectionStat}>
+//                                     <span style={{...s.sectionStatDot, backgroundColor:"#E0DFDC"}}/>
+//                                     <span style={{fontSize:"12px", color:"#333"}}>Left: <strong>{section.remaining}%</strong></span>
+//                                   </div>
+//                                 </div>
+//                                 {/* Mini progress bar */}
+//                                 <div style={s.miniTrack}>
+//                                   <div style={{...s.miniFill, width:`${section.percentage}%`, backgroundColor:color}}/>
+//                                 </div>
+//                               </div>
+//                             </div>
+//                             {section.notes && (
+//                               <p style={s.sectionNotes}>{section.notes}</p>
+//                             )}
+//                             {section.updated_at && (
+//                               <p style={s.sectionUpdated}>
+//                                 Last updated {new Date(section.updated_at).toLocaleDateString("en-IN", {day:"numeric", month:"short", year:"numeric"})}
+//                               </p>
+//                             )}
+//                           </div>
+//                         );
+//                       })}
+//                     </div>
+//                   </>
+//                 )}
+
+//                 {project.sections && project.sections.length === 0 && (
+//                   <div style={s.noSections}>
+//                     <p style={{fontSize:"14px", color:"#666"}}>Section details will be added by your project manager soon.</p>
+//                   </div>
+//                 )}
+
+//               </div>
+//             )}
+//           </>
+//         )}
+//       </div>
+
+//       {/* Footer */}
+//       <div style={s.footer}>
+//         {["About","Help Center","Privacy","Terms","© 2025 Builder"].map(item => (
+//           <span key={item} style={s.footerItem}>{item}</span>
+//         ))}
+//       </div>
+//     </div>
+//   );
+// }
+
+// const css = `
+//   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+//   @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+//   .logout-hover:hover { background: #F3F2EF !important; color: #CC1016 !important; }
+//   * { box-sizing: border-box; }
+// `;
+
+// const s = {
+//   root:         { minHeight:"100vh", backgroundColor:"#F3F2EF", fontFamily:"'Inter', sans-serif", display:"flex", flexDirection:"column" },
+//   navbar:       { backgroundColor:"#FFFFFF", borderBottom:"1px solid #E0DFDC", position:"sticky", top:0, zIndex:100 },
+//   navInner:     { maxWidth:"1100px", margin:"0 auto", padding:"12px 24px", display:"flex", alignItems:"center", justifyContent:"space-between" },
+//   navLogo:      { display:"flex", alignItems:"center", gap:"8px" },
+//   navBrand:     { fontSize:"20px", fontWeight:"700", color:"#0A66C2", letterSpacing:"-0.3px" },
+//   navRight:     { display:"flex", alignItems:"center", gap:"12px" },
+//   navName:      { fontSize:"14px", fontWeight:"600", color:"#333" },
+//   badge:        { fontSize:"12px", fontWeight:"600", padding:"4px 10px", borderRadius:"12px", backgroundColor:"#FDF0EC", border:"1px solid #F5C2B0", color:"#B24020" },
+//   logoutBtn:    { padding:"8px 18px", backgroundColor:"transparent", color:"#666", border:"1px solid #C9C5C0", borderRadius:"24px", fontSize:"14px", fontWeight:"600", cursor:"pointer", fontFamily:"'Inter', sans-serif", transition:"all 0.15s" },
+//   main:         { flex:1, maxWidth:"1100px", margin:"0 auto", padding:"32px 24px", width:"100%" },
+//   pageHeader:   { marginBottom:"24px" },
+//   pageTitle:    { fontSize:"26px", fontWeight:"700", color:"#000000E6", marginBottom:"4px" },
+//   pageSub:      { fontSize:"14px", color:"#666" },
+//   loadingCard:  { backgroundColor:"#FFFFFF", borderRadius:"8px", boxShadow:"0 0 0 1px rgba(0,0,0,0.08)", padding:"60px", textAlign:"center" },
+//   errorCard:    { backgroundColor:"#FFF0F0", border:"1px solid #FFCCCC", borderRadius:"8px", padding:"16px", color:"#CC1016", fontSize:"14px" },
+//   emptyCard:    { backgroundColor:"#FFFFFF", borderRadius:"8px", boxShadow:"0 0 0 1px rgba(0,0,0,0.08)", padding:"60px", textAlign:"center", maxWidth:"480px", margin:"0 auto" },
+//   projectTabs:  { display:"flex", gap:"8px", marginBottom:"20px", flexWrap:"wrap" },
+//   projectTab:   { padding:"8px 18px", borderRadius:"24px", fontSize:"14px", fontWeight:"600", cursor:"pointer", border:"1.5px solid #C9C5C0", backgroundColor:"#FFFFFF", color:"#666", fontFamily:"'Inter', sans-serif", transition:"all 0.15s" },
+//   projectTabActive: { backgroundColor:"#0A66C2", borderColor:"#0A66C2", color:"#FFFFFF" },
+//   overviewCard: { backgroundColor:"#FFFFFF", borderRadius:"12px", boxShadow:"0 0 0 1px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.06)", padding:"32px", display:"flex", alignItems:"flex-start", gap:"32px" },
+//   overviewLeft: { flex:1 },
+//   overviewTop:  { display:"flex", alignItems:"center", gap:"12px", marginBottom:"8px", flexWrap:"wrap" },
+//   projectName:  { fontSize:"22px", fontWeight:"700", color:"#000000E6" },
+//   projectDesc:  { fontSize:"14px", color:"#666", lineHeight:"1.6", marginBottom:"20px" },
+//   timeline:     { display:"flex", gap:"24px", marginBottom:"20px", flexWrap:"wrap" },
+//   timelineItem: { display:"flex", flexDirection:"column", gap:"2px" },
+//   timelineLabel:{ fontSize:"11px", fontWeight:"600", color:"#999", textTransform:"uppercase", letterSpacing:"0.5px" },
+//   timelineValue:{ fontSize:"14px", fontWeight:"600", color:"#333" },
+//   overallProgress: { marginTop:"4px" },
+//   progressHeader:  { display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"8px" },
+//   progressLabel:   { fontSize:"13px", fontWeight:"600", color:"#333" },
+//   progressValue:   { fontSize:"20px", fontWeight:"700", color:"#0A66C2" },
+//   progressTrack:   { height:"10px", backgroundColor:"#E0DFDC", borderRadius:"5px", overflow:"hidden" },
+//   progressFill:    { height:"100%", borderRadius:"5px", transition:"width 0.5s ease" },
+//   progressFooter:  { display:"flex", justifyContent:"space-between", marginTop:"6px" },
+//   overviewRight:   { display:"flex", flexDirection:"column", alignItems:"center", flexShrink:0 },
+//   sectionHeading:  { fontSize:"18px", fontWeight:"700", color:"#000000E6" },
+//   sectionsGrid:    { display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(280px, 1fr))", gap:"16px" },
+//   sectionCard:     { backgroundColor:"#FFFFFF", borderRadius:"8px", boxShadow:"0 0 0 1px rgba(0,0,0,0.08)", padding:"20px" },
+//   sectionCardTop:  { display:"flex", alignItems:"center", gap:"16px" },
+//   sectionInfo:     { flex:1 },
+//   sectionName:     { fontSize:"15px", fontWeight:"700", color:"#000000E6", marginBottom:"8px" },
+//   sectionStats:    { display:"flex", flexDirection:"column", gap:"4px", marginBottom:"10px" },
+//   sectionStat:     { display:"flex", alignItems:"center", gap:"6px" },
+//   sectionStatDot:  { width:"8px", height:"8px", borderRadius:"50%", flexShrink:0 },
+//   miniTrack:       { height:"4px", backgroundColor:"#E0DFDC", borderRadius:"2px", overflow:"hidden" },
+//   miniFill:        { height:"100%", borderRadius:"2px", transition:"width 0.5s ease" },
+//   sectionNotes:    { fontSize:"12px", color:"#666", marginTop:"12px", padding:"8px 12px", backgroundColor:"#F8F7F4", borderRadius:"6px", lineHeight:"1.5" },
+//   sectionUpdated:  { fontSize:"11px", color:"#999", marginTop:"8px" },
+//   noSections:      { backgroundColor:"#FFFFFF", borderRadius:"8px", boxShadow:"0 0 0 1px rgba(0,0,0,0.08)", padding:"32px", textAlign:"center" },
+//   footer:          { borderTop:"1px solid #E0DFDC", backgroundColor:"#FFFFFF", padding:"16px 24px", display:"flex", flexWrap:"wrap", gap:"16px", justifyContent:"center", marginTop:"auto" },
+//   footerItem:      { fontSize:"12px", color:"#666", cursor:"pointer" },
+// };
+
+
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import { getMyProjects } from "../api/attendance";
+import { getUnits } from "../api/units";
 
-// ── Pure SVG Pie Chart ──
-function PieChart({ percentage, color = "#0A66C2", size = 120 }) {
-  const radius     = 45;
-  const cx         = size / 2;
-  const cy         = size / 2;
-  const circumference = 2 * Math.PI * radius;
-  const filled     = (percentage / 100) * circumference;
-  const empty      = circumference - filled;
-
-  // Convert percentage to arc path
-  const angle      = (percentage / 100) * 360;
-  const rad        = (angle - 90) * (Math.PI / 180);
-  const x          = cx + radius * Math.cos(rad);
-  const y          = cy + radius * Math.sin(rad);
-  const largeArc   = angle > 180 ? 1 : 0;
-
-  const pathData = percentage >= 100
-    ? `M ${cx} ${cy - radius} A ${radius} ${radius} 0 1 1 ${cx - 0.001} ${cy - radius} Z`
-    : percentage <= 0
-    ? ""
-    : `M ${cx} ${cy - radius} A ${radius} ${radius} 0 ${largeArc} 1 ${x} ${y} L ${cx} ${cy} Z`;
-
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      {/* Background circle */}
-      <circle cx={cx} cy={cy} r={radius} fill="#F3F2EF" stroke="#E0DFDC" strokeWidth="1"/>
-      {/* Filled arc */}
-      {percentage > 0 && (
-        <path d={pathData} fill={color} opacity="0.9"/>
-      )}
-      {/* Center white circle — donut effect */}
-      <circle cx={cx} cy={cy} r={radius * 0.6} fill="#FFFFFF"/>
-      {/* Percentage text */}
-      <text
-        x={cx} y={cy + 1}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fontSize="16"
-        fontWeight="700"
-        fill="#000000E6"
-        fontFamily="Inter, sans-serif"
-      >
-        {Math.round(percentage)}%
-      </text>
-    </svg>
-  );
-}
-
-// Status config
-const STATUS_CONFIG = {
-  planning:    { label:"Planning",    color:"#666",    bg:"#F3F2EF", border:"#D0CFC9" },
-  in_progress: { label:"In Progress", color:"#0A66C2", bg:"#EEF3FB", border:"#C0D7F5" },
-  on_hold:     { label:"On Hold",     color:"#CC1016", bg:"#FFF0F0", border:"#FFCCCC" },
-  completed:   { label:"Completed",   color:"#057642", bg:"#F0FAF5", border:"#B8DFC9" },
+const THEME = {
+  bg: "#F3F2EF", white: "#FFFFFF", blue: "#0A66C2", blueLight: "#E8F0FE",
+  border: "#E0DFDC", text: "#1a1a1a", muted: "#666",
+  green: "#057642", greenBg: "#EAF3DE", greenBorder: "#C0DD97",
+  amber: "#854F0B", amberBg: "#FFF3E0", amberBorder: "#FAC775",
+  red: "#A32D2D", redBg: "#FCEBEB", redBorder: "#F7C1C1",
 };
 
-// Section colors — cycles through these for multiple sections
-const SECTION_COLORS = [
-  "#0A66C2", "#057642", "#7A3E00", "#6B3FA0",
-  "#B24020", "#0F6E56", "#185FA5", "#3B6D11",
-];
+const STATUS_CONFIG = {
+  done:        { label: "Done",        bg: "#EAF3DE", border: "#C0DD97", color: "#057642", dot: "#639922" },
+  in_progress: { label: "In progress", bg: "#FFF3E0", border: "#FAC775", color: "#854F0B", dot: "#BA7517" },
+  issue:       { label: "Issue",       bg: "#FCEBEB", border: "#F7C1C1", color: "#A32D2D", dot: "#E24B4A" },
+  not_started: { label: "Not started", bg: "#F3F2EF", border: "#E0DFDC", color: "#555",    dot: "#B4B2A9" },
+};
 
 export default function CustomerDashboard() {
   const { user, logout } = useAuth();
 
   const [projects, setProjects] = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState("");
-  const [selected, setSelected] = useState(0); // index of selected project
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [units, setUnits] = useState([]);
+  const [filter, setFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadProjects();
+    fetch("http://localhost:8000/projects/all", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+    }).then(r => r.json()).then(data => {
+      const list = Array.isArray(data) ? data : [];
+      setProjects(list);
+      if (list.length > 0) setSelectedProject(list[0]);
+      setLoading(false);
+    }).catch(() => setLoading(false));
   }, []);
 
-  const loadProjects = async () => {
-    setLoading(true);
-    try {
-      const data = await getMyProjects();
-      setProjects(data.projects || []);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    if (!selectedProject) return;
+    getUnits(selectedProject.id).then(setUnits).catch(() => {});
+  }, [selectedProject]);
+
+  const filteredUnits = units.filter(u =>
+    filter === "all" ||
+    (filter === "housing"  && u.unit_type === "housing") ||
+    (filter === "ancillary" && u.unit_type === "ancillary") ||
+    (filter === "carport"  && u.unit_type === "carport") ||
+    (filter === "technical" && u.unit_type === "technical")
+  );
+
+  const grouped = {
+    issue:       filteredUnits.filter(u => u.status === "issue"),
+    in_progress: filteredUnits.filter(u => u.status === "in_progress"),
+    not_started: filteredUnits.filter(u => u.status === "not_started"),
+    done:        filteredUnits.filter(u => u.status === "done"),
   };
 
-  const project = projects[selected];
+  const total     = units.length;
+  const doneCount = units.filter(u => u.status === "done").length;
+  const progress  = total > 0 ? Math.round((doneCount / total) * 100) : 0;
 
   return (
-    <div style={s.root}>
-      <style>{css}</style>
+    <div style={{ minHeight: "100vh", backgroundColor: THEME.bg, fontFamily: "'Inter', sans-serif" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'); *{box-sizing:border-box;margin:0;padding:0;}`}</style>
 
-      {/* Navbar */}
-      <div style={s.navbar}>
-        <div style={s.navInner}>
-          <div style={s.navLogo}>
+      {/* Topbar */}
+      <div style={{ background: THEME.white, borderBottom: `1px solid ${THEME.border}`, position: "sticky", top: 0, zIndex: 100 }}>
+        <div style={{ maxWidth: 1128, margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 52 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M3 21V8L12 3L21 8V21" stroke="#0A66C2" strokeWidth="2.5" strokeLinejoin="round"/>
-              <path d="M9 21V14H15V21" stroke="#0A66C2" strokeWidth="2.5" strokeLinejoin="round"/>
+              <path d="M3 21V8L12 3L21 8V21" stroke={THEME.blue} strokeWidth="2.5" strokeLinejoin="round"/>
+              <path d="M9 21V14H15V21" stroke={THEME.blue} strokeWidth="2.5" strokeLinejoin="round"/>
             </svg>
-            <span style={s.navBrand}>Builder</span>
+            <span style={{ fontSize: 18, fontWeight: 700, color: THEME.blue }}>Builder</span>
           </div>
-          <div style={s.navRight}>
-            <span style={s.navName}>{user?.full_name}</span>
-            <span style={s.badge}>Customer</span>
-            <button onClick={logout} style={s.logoutBtn} className="logout-hover">Sign out</button>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 13, color: THEME.muted }}>{user?.full_name}</span>
+            <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 12, background: "#FDF0EC", color: "#B24020", border: "1px solid #F5C2B0" }}>
+              Customer
+            </span>
+            <button onClick={logout} style={{ padding: "6px 14px", border: `1px solid ${THEME.border}`, borderRadius: 20, background: "transparent", color: THEME.muted, fontSize: 12, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+              Sign out
+            </button>
           </div>
         </div>
       </div>
 
-      <div style={s.main}>
+      <div style={{ maxWidth: 1128, margin: "0 auto", padding: 20 }}>
 
         {/* Page header */}
-        <div style={s.pageHeader}>
-          <h1 style={s.pageTitle}>My Projects</h1>
-          <p style={s.pageSub}>Track the progress of your construction projects</p>
+        <div style={{ marginBottom: 20 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: THEME.text, marginBottom: 4 }}>My Projects</h1>
+          <p style={{ fontSize: 13, color: THEME.muted }}>Track the progress of your construction</p>
         </div>
 
         {loading && (
-          <div style={s.loadingCard}>
-            <p style={{color:"#666", fontSize:"14px"}}>Loading your projects...</p>
-          </div>
-        )}
-
-        {error && (
-          <div style={s.errorCard}>{error}</div>
+          <div style={{ textAlign: "center", padding: 60, color: THEME.muted }}>Loading your projects...</div>
         )}
 
         {!loading && projects.length === 0 && (
-          <div style={s.emptyCard}>
-            <span style={{fontSize:"48px"}}>🏗️</span>
-            <h2 style={{fontSize:"18px", fontWeight:"700", color:"#000000E6", marginTop:"16px", marginBottom:"8px"}}>
-              No projects yet
-            </h2>
-            <p style={{fontSize:"14px", color:"#666"}}>
-              Your project manager hasn't assigned any projects to your account yet.
-              Please contact them for more information.
-            </p>
+          <div style={{ textAlign: "center", padding: 60, background: THEME.white, borderRadius: 12, border: `1px solid ${THEME.border}` }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>🏗️</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: THEME.text, marginBottom: 8 }}>No projects yet</div>
+            <div style={{ fontSize: 13, color: THEME.muted }}>Your project manager hasn't assigned any projects yet.</div>
           </div>
         )}
 
         {!loading && projects.length > 0 && (
           <>
-            {/* Project selector — if multiple projects */}
+            {/* Project selector */}
             {projects.length > 1 && (
-              <div style={s.projectTabs}>
-                {projects.map((p, i) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setSelected(i)}
-                    style={{...s.projectTab, ...(selected === i ? s.projectTabActive : {})}}
-                  >
+              <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+                {projects.map(p => (
+                  <button key={p.id} onClick={() => { setSelectedProject(p); setFilter("all"); }}
+                    style={{ padding: "7px 18px", borderRadius: 24, fontSize: 13, fontWeight: 600, cursor: "pointer", border: `1.5px solid ${selectedProject?.id === p.id ? THEME.blue : THEME.border}`, background: selectedProject?.id === p.id ? THEME.blue : THEME.white, color: selectedProject?.id === p.id ? "#fff" : THEME.muted, fontFamily: "Inter, sans-serif" }}>
                     {p.name}
                   </button>
                 ))}
               </div>
             )}
 
-            {project && (
-              <div style={{display:"flex", flexDirection:"column", gap:"20px", animation:"fadeIn 0.3s ease"}}>
-
-                {/* Project overview card */}
-                <div style={s.overviewCard}>
-                  <div style={s.overviewLeft}>
-                    <div style={s.overviewTop}>
-                      <h2 style={s.projectName}>{project.name}</h2>
-                      {project.status && STATUS_CONFIG[project.status] && (
-                        <span style={{
-                          fontSize:"12px", fontWeight:"600", padding:"4px 12px",
-                          borderRadius:"12px",
-                          backgroundColor: STATUS_CONFIG[project.status].bg,
-                          border: `1px solid ${STATUS_CONFIG[project.status].border}`,
-                          color: STATUS_CONFIG[project.status].color,
-                        }}>
-                          {STATUS_CONFIG[project.status].label}
-                        </span>
-                      )}
-                    </div>
-
-                    {project.description && (
-                      <p style={s.projectDesc}>{project.description}</p>
-                    )}
-
-                    {/* Timeline */}
-                    {(project.start_date || project.end_date) && (
-                      <div style={s.timeline}>
-                        {project.start_date && (
-                          <div style={s.timelineItem}>
-                            <span style={s.timelineLabel}>Started</span>
-                            <span style={s.timelineValue}>{project.start_date}</span>
-                          </div>
-                        )}
-                        {project.end_date && (
-                          <div style={s.timelineItem}>
-                            <span style={s.timelineLabel}>Expected completion</span>
-                            <span style={s.timelineValue}>{project.end_date}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Overall progress bar */}
-                    <div style={s.overallProgress}>
-                      <div style={s.progressHeader}>
-                        <span style={s.progressLabel}>Overall completion</span>
-                        <span style={s.progressValue}>{project.overall_progress}%</span>
-                      </div>
-                      <div style={s.progressTrack}>
-                        <div style={{
-                          ...s.progressFill,
-                          width: `${project.overall_progress}%`,
-                          backgroundColor: project.overall_progress >= 100
-                            ? "#057642"
-                            : project.overall_progress >= 50
-                            ? "#0A66C2"
-                            : "#F59E0B",
-                        }}/>
-                      </div>
-                      <div style={s.progressFooter}>
-                        <span style={{fontSize:"12px", color:"#666"}}>
-                          {project.overall_progress >= 100
-                            ? "🎉 Project complete!"
-                            : `${100 - project.overall_progress}% remaining`}
-                        </span>
-                        {project.updated_at && (
-                          <span style={{fontSize:"12px", color:"#999"}}>
-                            Updated {new Date(project.updated_at).toLocaleDateString("en-IN", {day:"numeric", month:"short"})}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Big donut chart for overall */}
-                  <div style={s.overviewRight}>
-                    <PieChart
-                      percentage={project.overall_progress}
-                      color={project.overall_progress >= 100 ? "#057642" : "#0A66C2"}
-                      size={160}
-                    />
-                    <p style={{fontSize:"12px", color:"#666", marginTop:"8px", textAlign:"center"}}>
-                      Overall progress
-                    </p>
+            {/* Project overview card */}
+            <div style={{ background: THEME.white, border: `1px solid ${THEME.border}`, borderRadius: 12, padding: "20px 24px", marginBottom: 20 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: THEME.text, marginBottom: 4 }}>{selectedProject?.name}</div>
+                  <div style={{ fontSize: 13, color: THEME.muted }}>
+                    {selectedProject?.start_date} → {selectedProject?.end_date || "TBD"}
                   </div>
                 </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: THEME.blue }}>{progress}%</div>
+                  <div style={{ fontSize: 12, color: THEME.muted }}>overall completion</div>
+                </div>
+              </div>
 
-                {/* Sections grid */}
-                {project.sections && project.sections.length > 0 && (
-                  <>
-                    <h2 style={s.sectionHeading}>Section Breakdown</h2>
-                    <div style={s.sectionsGrid}>
-                      {project.sections.map((section, i) => {
-                        const color = SECTION_COLORS[i % SECTION_COLORS.length];
-                        return (
-                          <div key={i} style={s.sectionCard}>
-                            <div style={s.sectionCardTop}>
-                              <PieChart
-                                percentage={section.percentage}
-                                color={color}
-                                size={100}
-                              />
-                              <div style={s.sectionInfo}>
-                                <h3 style={s.sectionName}>{section.section_name}</h3>
-                                <div style={s.sectionStats}>
-                                  <div style={s.sectionStat}>
-                                    <span style={{...s.sectionStatDot, backgroundColor:color}}/>
-                                    <span style={{fontSize:"12px", color:"#333"}}>Done: <strong>{section.percentage}%</strong></span>
-                                  </div>
-                                  <div style={s.sectionStat}>
-                                    <span style={{...s.sectionStatDot, backgroundColor:"#E0DFDC"}}/>
-                                    <span style={{fontSize:"12px", color:"#333"}}>Left: <strong>{section.remaining}%</strong></span>
-                                  </div>
-                                </div>
-                                {/* Mini progress bar */}
-                                <div style={s.miniTrack}>
-                                  <div style={{...s.miniFill, width:`${section.percentage}%`, backgroundColor:color}}/>
-                                </div>
-                              </div>
-                            </div>
-                            {section.notes && (
-                              <p style={s.sectionNotes}>{section.notes}</p>
-                            )}
-                            {section.updated_at && (
-                              <p style={s.sectionUpdated}>
-                                Last updated {new Date(section.updated_at).toLocaleDateString("en-IN", {day:"numeric", month:"short", year:"numeric"})}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
+              {/* Progress bar */}
+              <div style={{ marginTop: 16 }}>
+                <div style={{ height: 8, background: THEME.border, borderRadius: 4, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${progress}%`, background: progress === 100 ? THEME.green : THEME.blue, borderRadius: 4, transition: "width 0.5s ease" }} />
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
+                  <span style={{ fontSize: 12, color: THEME.muted }}>{doneCount} of {total} units complete</span>
+                  <span style={{ fontSize: 12, color: THEME.muted }}>{total - doneCount} remaining</span>
+                </div>
+              </div>
+
+              {/* Quick status summary */}
+              <div style={{ display: "flex", gap: 16, marginTop: 16, flexWrap: "wrap" }}>
+                {Object.entries(STATUS_CONFIG).map(([key, cfg]) => {
+                  const count = units.filter(u => u.status === key).length;
+                  if (count === 0) return null;
+                  return (
+                    <div key={key} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: cfg.dot }} />
+                      <span style={{ fontSize: 12, color: THEME.muted }}>{cfg.label}: <strong style={{ color: THEME.text }}>{count}</strong></span>
                     </div>
-                  </>
-                )}
+                  );
+                })}
+              </div>
+            </div>
 
-                {project.sections && project.sections.length === 0 && (
-                  <div style={s.noSections}>
-                    <p style={{fontSize:"14px", color:"#666"}}>Section details will be added by your project manager soon.</p>
+            {/* Filter tabs */}
+            <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
+              {["all", "housing", "ancillary", "carport", "technical"].map(f => (
+                <button key={f} onClick={() => setFilter(f)}
+                  style={{ padding: "5px 14px", borderRadius: 20, border: `1px solid ${filter === f ? THEME.blue : THEME.border}`, background: filter === f ? THEME.blue : THEME.white, color: filter === f ? "#fff" : THEME.muted, fontSize: 12, cursor: "pointer", fontFamily: "Inter, sans-serif", fontWeight: filter === f ? 600 : 400 }}>
+                  {f === "all" ? "All" : f.charAt(0).toUpperCase() + f.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {/* Unit groups — read only */}
+            {Object.entries(grouped).map(([status, unitList]) => {
+              if (unitList.length === 0) return null;
+              const cfg = STATUS_CONFIG[status];
+              return (
+                <div key={status} style={{ marginBottom: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: cfg.dot }} />
+                    <span style={{ fontSize: 12, fontWeight: 600, color: THEME.text, textTransform: "uppercase", letterSpacing: "0.05em" }}>{cfg.label}</span>
+                    <span style={{ fontSize: 11, color: THEME.muted }}>{unitList.length} unit{unitList.length !== 1 ? "s" : ""}</span>
                   </div>
-                )}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {unitList.map(u => (
+                      <div key={u.id}
+                        style={{ padding: "8px 14px", borderRadius: 10, border: `1px solid ${cfg.border}`, background: cfg.bg, display: "flex", alignItems: "center", gap: 10, minWidth: 140 }}>
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: cfg.color }}>{u.name}</div>
+                          {u.notes && <div style={{ fontSize: 11, color: THEME.muted, marginTop: 2 }}>{u.notes}</div>}
+                          {!u.notes && status !== "not_started" && status !== "done" && (
+                            <div style={{ fontSize: 11, color: THEME.muted, marginTop: 2 }}>{cfg.label}</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
 
+            {units.length === 0 && (
+              <div style={{ textAlign: "center", padding: 40, color: THEME.muted, background: THEME.white, borderRadius: 12, border: `1px solid ${THEME.border}` }}>
+                No units found for this project yet.
               </div>
             )}
           </>
         )}
       </div>
 
-      {/* Footer */}
-      <div style={s.footer}>
-        {["About","Help Center","Privacy","Terms","© 2025 Builder"].map(item => (
-          <span key={item} style={s.footerItem}>{item}</span>
+      <div style={{ borderTop: `1px solid ${THEME.border}`, background: THEME.white, padding: "14px 24px", display: "flex", gap: 16, justifyContent: "center", marginTop: 40 }}>
+        {["About", "Help Center", "Privacy", "Terms", "© 2025 Builder"].map(item => (
+          <span key={item} style={{ fontSize: 12, color: THEME.muted }}>{item}</span>
         ))}
       </div>
     </div>
   );
 }
-
-const css = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-  .logout-hover:hover { background: #F3F2EF !important; color: #CC1016 !important; }
-  * { box-sizing: border-box; }
-`;
-
-const s = {
-  root:         { minHeight:"100vh", backgroundColor:"#F3F2EF", fontFamily:"'Inter', sans-serif", display:"flex", flexDirection:"column" },
-  navbar:       { backgroundColor:"#FFFFFF", borderBottom:"1px solid #E0DFDC", position:"sticky", top:0, zIndex:100 },
-  navInner:     { maxWidth:"1100px", margin:"0 auto", padding:"12px 24px", display:"flex", alignItems:"center", justifyContent:"space-between" },
-  navLogo:      { display:"flex", alignItems:"center", gap:"8px" },
-  navBrand:     { fontSize:"20px", fontWeight:"700", color:"#0A66C2", letterSpacing:"-0.3px" },
-  navRight:     { display:"flex", alignItems:"center", gap:"12px" },
-  navName:      { fontSize:"14px", fontWeight:"600", color:"#333" },
-  badge:        { fontSize:"12px", fontWeight:"600", padding:"4px 10px", borderRadius:"12px", backgroundColor:"#FDF0EC", border:"1px solid #F5C2B0", color:"#B24020" },
-  logoutBtn:    { padding:"8px 18px", backgroundColor:"transparent", color:"#666", border:"1px solid #C9C5C0", borderRadius:"24px", fontSize:"14px", fontWeight:"600", cursor:"pointer", fontFamily:"'Inter', sans-serif", transition:"all 0.15s" },
-  main:         { flex:1, maxWidth:"1100px", margin:"0 auto", padding:"32px 24px", width:"100%" },
-  pageHeader:   { marginBottom:"24px" },
-  pageTitle:    { fontSize:"26px", fontWeight:"700", color:"#000000E6", marginBottom:"4px" },
-  pageSub:      { fontSize:"14px", color:"#666" },
-  loadingCard:  { backgroundColor:"#FFFFFF", borderRadius:"8px", boxShadow:"0 0 0 1px rgba(0,0,0,0.08)", padding:"60px", textAlign:"center" },
-  errorCard:    { backgroundColor:"#FFF0F0", border:"1px solid #FFCCCC", borderRadius:"8px", padding:"16px", color:"#CC1016", fontSize:"14px" },
-  emptyCard:    { backgroundColor:"#FFFFFF", borderRadius:"8px", boxShadow:"0 0 0 1px rgba(0,0,0,0.08)", padding:"60px", textAlign:"center", maxWidth:"480px", margin:"0 auto" },
-  projectTabs:  { display:"flex", gap:"8px", marginBottom:"20px", flexWrap:"wrap" },
-  projectTab:   { padding:"8px 18px", borderRadius:"24px", fontSize:"14px", fontWeight:"600", cursor:"pointer", border:"1.5px solid #C9C5C0", backgroundColor:"#FFFFFF", color:"#666", fontFamily:"'Inter', sans-serif", transition:"all 0.15s" },
-  projectTabActive: { backgroundColor:"#0A66C2", borderColor:"#0A66C2", color:"#FFFFFF" },
-  overviewCard: { backgroundColor:"#FFFFFF", borderRadius:"12px", boxShadow:"0 0 0 1px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.06)", padding:"32px", display:"flex", alignItems:"flex-start", gap:"32px" },
-  overviewLeft: { flex:1 },
-  overviewTop:  { display:"flex", alignItems:"center", gap:"12px", marginBottom:"8px", flexWrap:"wrap" },
-  projectName:  { fontSize:"22px", fontWeight:"700", color:"#000000E6" },
-  projectDesc:  { fontSize:"14px", color:"#666", lineHeight:"1.6", marginBottom:"20px" },
-  timeline:     { display:"flex", gap:"24px", marginBottom:"20px", flexWrap:"wrap" },
-  timelineItem: { display:"flex", flexDirection:"column", gap:"2px" },
-  timelineLabel:{ fontSize:"11px", fontWeight:"600", color:"#999", textTransform:"uppercase", letterSpacing:"0.5px" },
-  timelineValue:{ fontSize:"14px", fontWeight:"600", color:"#333" },
-  overallProgress: { marginTop:"4px" },
-  progressHeader:  { display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"8px" },
-  progressLabel:   { fontSize:"13px", fontWeight:"600", color:"#333" },
-  progressValue:   { fontSize:"20px", fontWeight:"700", color:"#0A66C2" },
-  progressTrack:   { height:"10px", backgroundColor:"#E0DFDC", borderRadius:"5px", overflow:"hidden" },
-  progressFill:    { height:"100%", borderRadius:"5px", transition:"width 0.5s ease" },
-  progressFooter:  { display:"flex", justifyContent:"space-between", marginTop:"6px" },
-  overviewRight:   { display:"flex", flexDirection:"column", alignItems:"center", flexShrink:0 },
-  sectionHeading:  { fontSize:"18px", fontWeight:"700", color:"#000000E6" },
-  sectionsGrid:    { display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(280px, 1fr))", gap:"16px" },
-  sectionCard:     { backgroundColor:"#FFFFFF", borderRadius:"8px", boxShadow:"0 0 0 1px rgba(0,0,0,0.08)", padding:"20px" },
-  sectionCardTop:  { display:"flex", alignItems:"center", gap:"16px" },
-  sectionInfo:     { flex:1 },
-  sectionName:     { fontSize:"15px", fontWeight:"700", color:"#000000E6", marginBottom:"8px" },
-  sectionStats:    { display:"flex", flexDirection:"column", gap:"4px", marginBottom:"10px" },
-  sectionStat:     { display:"flex", alignItems:"center", gap:"6px" },
-  sectionStatDot:  { width:"8px", height:"8px", borderRadius:"50%", flexShrink:0 },
-  miniTrack:       { height:"4px", backgroundColor:"#E0DFDC", borderRadius:"2px", overflow:"hidden" },
-  miniFill:        { height:"100%", borderRadius:"2px", transition:"width 0.5s ease" },
-  sectionNotes:    { fontSize:"12px", color:"#666", marginTop:"12px", padding:"8px 12px", backgroundColor:"#F8F7F4", borderRadius:"6px", lineHeight:"1.5" },
-  sectionUpdated:  { fontSize:"11px", color:"#999", marginTop:"8px" },
-  noSections:      { backgroundColor:"#FFFFFF", borderRadius:"8px", boxShadow:"0 0 0 1px rgba(0,0,0,0.08)", padding:"32px", textAlign:"center" },
-  footer:          { borderTop:"1px solid #E0DFDC", backgroundColor:"#FFFFFF", padding:"16px 24px", display:"flex", flexWrap:"wrap", gap:"16px", justifyContent:"center", marginTop:"auto" },
-  footerItem:      { fontSize:"12px", color:"#666", cursor:"pointer" },
-};

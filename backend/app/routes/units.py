@@ -237,3 +237,23 @@ def delete_unit_task(
     db.delete(task)
     db.commit()
     return {"message": "Task deleted"}
+
+# Update unit notes — team_lead and above
+class UnitNotesUpdate(BaseModel):
+    notes: str
+
+@router.patch("/{unit_id}/notes")
+def update_unit_notes(
+    unit_id: UUID,
+    body: UnitNotesUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "architect", "supervisor", "team_lead")),
+):
+    unit = db.query(Unit).filter(Unit.id == unit_id).first()
+    if not unit:
+        raise HTTPException(status_code=404, detail="Unit not found")
+    unit.notes = body.notes
+    unit.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(unit)
+    return unit
