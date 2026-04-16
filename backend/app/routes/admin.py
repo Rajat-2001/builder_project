@@ -171,6 +171,8 @@ def delete_user(
     current_user: User = Depends(require_role("admin"))
 ):
     """Permanently delete a user and all their records."""
+    from app.models.attendance import Attendance
+
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
@@ -180,6 +182,10 @@ def delete_user(
             status_code=400,
             detail="You cannot delete your own account."
         )
+
+    # Manually delete attendance records first
+    # This bypasses SQLAlchemy's cascade conflict
+    db.query(Attendance).filter(Attendance.user_id == user_id).delete()
 
     db.delete(user)
     db.commit()

@@ -131,6 +131,9 @@ from app.models.user import User, UserRole
 from app.routes import auth
 from app.routes import admin, attendance as attendance_routes, projects
 from app.core.security import hash_password
+from app.routes import units as units_routes
+from app.routes import work_sessions as work_sessions_routes
+from app.routes import bonus_hours as bonus_hours_routes
 
 load_dotenv()
 
@@ -169,6 +172,9 @@ app.include_router(auth.router)               # /auth/*
 app.include_router(admin.router)              # /admin/*
 app.include_router(attendance_routes.router)  # /attendance/*
 app.include_router(projects.router)           # /projects/*
+app.include_router(units_routes.router)       # /units/*
+app.include_router(work_sessions_routes.router)  # /sessions/*
+app.include_router(bonus_hours_routes.router)   # /bonus/*
 
 
 # ─────────────────────────────────────────
