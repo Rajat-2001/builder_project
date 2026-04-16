@@ -2,7 +2,7 @@ const BASE = "http://localhost:8000";
 
 const authHeaders = () => ({
   "Content-Type": "application/json",
-  Authorization: `Bearer ${localStorage.getItem("token")}`,
+  Authorization: `Bearer ${localStorage.getItem("access_token")}`,
 });
 
 // Get all units for a project

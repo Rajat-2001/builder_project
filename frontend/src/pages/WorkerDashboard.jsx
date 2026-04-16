@@ -345,7 +345,8 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { getUnits, getUnit } from "../api/units";
 import { clockIn, clockOut, getSessionStatus, submitWorkReport } from "../api/sessions";
-import { getMySummary, getMyBonus } from "../api/bonus";
+import { getMySummary } from "../api/sessions";
+import { getMyBonus } from "../api/bonus";
 
 const THEME = {
   bg: "#F3F2EF",
@@ -416,8 +417,8 @@ export default function WorkerDashboard() {
 
   // Load projects on mount
   useEffect(() => {
-    fetch("http://localhost:8000/admin/projects", {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    fetch("http://localhost:8000/projects/all", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
     })
       .then(r => r.json())
       .then(data => {
@@ -612,6 +613,44 @@ export default function WorkerDashboard() {
           {msg.text}
         </div>
       )}
+
+            {/* Step indicator */}
+      <div style={{ display: "flex", alignItems: "center", gap: 0, marginBottom: 20, background: THEME.white, border: `1px solid ${THEME.border}`, borderRadius: 10, overflow: "hidden" }}>
+        {[
+          { step: 1, label: "Select project", done: !!selectedProject, active: !session && !!selectedProject },
+          { step: 2, label: "Check in",       done: !!session,          active: !!selectedProject && !session },
+          { step: 3, label: "Tick tasks",     done: Object.values(tickedTasks).some(Boolean), active: !!session && !Object.values(tickedTasks).some(Boolean) },
+          { step: 4, label: "Submit report",  done: false,              active: !!session && Object.values(tickedTasks).some(Boolean) },
+        ].map(({ step, label, done, active }, i, arr) => (
+          <div key={step} style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            padding: "10px 8px",
+            background: done ? THEME.greenBg : active ? THEME.blueLight : THEME.white,
+            borderRight: i < arr.length - 1 ? `1px solid ${THEME.border}` : "none",
+          }}>
+            <div style={{
+              width: 22, height: 22, borderRadius: "50%",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 11, fontWeight: 700, flexShrink: 0,
+              background: done ? THEME.green : active ? THEME.blue : THEME.border,
+              color: done || active ? "#fff" : THEME.muted,
+            }}>
+              {done ? "✓" : step}
+            </div>
+            <span style={{
+              fontSize: 12, fontWeight: active || done ? 600 : 400,
+              color: done ? THEME.green : active ? THEME.blue : THEME.muted,
+              whiteSpace: "nowrap",
+            }}>
+              {label}
+            </span>
+          </div>
+        ))}
+      </div>
 
       <div style={{ maxWidth: 1128, margin: "0 auto", padding: "20px" }}>
 

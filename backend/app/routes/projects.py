@@ -11,6 +11,29 @@ router = APIRouter(prefix="/projects", tags=["Projects"])
 
 
 # ─────────────────────────────────────────
+# GET /projects/all
+# All logged-in users can see all projects
+# Used by worker/team lead dashboards
+# ─────────────────────────────────────────
+
+@router.get("/all")
+def get_all_projects_any_role(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    projects = db.query(Project).order_by(Project.created_at.desc()).all()
+    return [
+        {
+            "id":         str(p.id),
+            "name":       p.name,
+            "status":     p.status,
+            "start_date": p.start_date,
+            "end_date":   p.end_date,
+        }
+        for p in projects
+    ]
+
+# ─────────────────────────────────────────
 # GET /projects/my
 # Customer sees their own project(s)
 # ─────────────────────────────────────────
@@ -165,3 +188,4 @@ def get_all_projects(
         }
         for p in projects
     ]
+
