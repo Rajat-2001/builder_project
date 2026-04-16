@@ -270,11 +270,9 @@ def team_reports(
     current_user: User = Depends(require_role("admin", "architect", "supervisor", "team_lead")),
 ):
     sessions = db.query(WorkSession).filter(
-        and_(
             WorkSession.project_id == project_id,
-            WorkSession.is_active == False,
-        )
-    ).order_by(WorkSession.session_date.desc()).all()
+            WorkSession.user_id != current_user.id,
+        ).order_by(WorkSession.session_date.desc()).all()
 
     result = []
     for s in sessions:
