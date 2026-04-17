@@ -374,24 +374,24 @@ def get_all_hours(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin"))
 ):
-    """
-    Returns a dict of user_id → total hours this month.
-    Admin dashboard merges this with the users list.
-    Only counts completed shifts (is_active = False).
-    """
-    from app.models.attendance import Attendance
+    from app.models.work_session import WorkSession
+    from sqlalchemy import func, and_
+    from datetime import date
 
-    month = datetime.now(timezone.utc).strftime("%Y-%m")
+    first_of_month = date.today().replace(day=1)
 
-    records = db.query(Attendance).filter(
-        Attendance.is_active  == False,
-        Attendance.shift_date.like(f"{month}%")
-    ).all()
+    rows = db.query(
+        WorkSession.user_id,
+        func.sum(WorkSession.total_hours).label("total_hours")
+    ).filter(
+        and_(
+            WorkSession.session_date >= first_of_month,
+            WorkSession.total_hours.isnot(None),
+        )
+    ).group_by(WorkSession.user_id).all()
 
-    # Sum hours per user
     hours_map = {}
-    for r in records:
-        uid = str(r.user_id)
-        hours_map[uid] = round(hours_map.get(uid, 0) + (r.total_hours or 0), 2)
+    for r in rows:
+        hours_map[str(r.user_id)] = round(r.total_hours or 0, 2)
 
     return hours_map

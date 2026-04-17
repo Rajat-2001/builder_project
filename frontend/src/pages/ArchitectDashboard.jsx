@@ -120,9 +120,9 @@ export default function ArchitectDashboard() {
 
   const filteredUnits = units.filter(u =>
     filter === "all" ||
-    (filter === "housing"  && u.unit_type === "housing") ||
+    (filter === "housing"   && u.unit_type === "housing") ||
     (filter === "ancillary" && u.unit_type === "ancillary") ||
-    (filter === "carport"  && u.unit_type === "carport") ||
+    (filter === "carport"   && u.unit_type === "carport") ||
     (filter === "technical" && u.unit_type === "technical")
   );
 
@@ -186,10 +186,10 @@ export default function ArchitectDashboard() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
             <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
               {[
-                { label: "Total units",   value: units.length,                                    color: THEME.text },
-                { label: "In progress",   value: units.filter(u => u.status === "in_progress").length, color: THEME.amber },
-                { label: "Done",          value: totalDone,                                        color: THEME.green },
-                { label: "Issues",        value: units.filter(u => u.status === "issue").length,  color: THEME.red },
+                { label: "Total units", value: units.length,                                         color: THEME.text },
+                { label: "In progress", value: units.filter(u => u.status === "in_progress").length, color: THEME.amber },
+                { label: "Done",        value: totalDone,                                            color: THEME.green },
+                { label: "Issues",      value: units.filter(u => u.status === "issue").length,       color: THEME.red },
               ].map(({ label, value, color }) => (
                 <div key={label}>
                   <div style={{ fontSize: 11, color: THEME.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</div>
@@ -234,27 +234,81 @@ export default function ArchitectDashboard() {
 
             <div style={{ display: "grid", gridTemplateColumns: selectedUnit ? "1fr 380px" : "1fr", gap: 16 }}>
               <div>
-                {Object.entries(grouped).map(([status, unitList]) => {
-                  if (unitList.length === 0) return null;
-                  const cfg = STATUS_CONFIG[status];
-                  return (
-                    <div key={status} style={{ marginBottom: 16 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: cfg.dot }} />
-                        <span style={{ fontSize: 12, fontWeight: 600, color: THEME.text, textTransform: "uppercase", letterSpacing: "0.05em" }}>{cfg.label}</span>
-                        <span style={{ fontSize: 11, color: THEME.muted }}>{unitList.length} unit{unitList.length !== 1 ? "s" : ""}</span>
-                      </div>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                        {unitList.map(u => (
-                          <button key={u.id} onClick={() => handleSelectUnit(u)}
-                            style={{ padding: "5px 14px", borderRadius: 20, border: `1.5px solid ${selectedUnit?.id === u.id ? THEME.blue : cfg.border}`, background: selectedUnit?.id === u.id ? THEME.blueLight : cfg.bg, color: selectedUnit?.id === u.id ? THEME.blue : cfg.color, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
-                            {u.name}
-                          </button>
-                        ))}
-                      </div>
+                {/* Issues first */}
+                {grouped.issue.length > 0 && (
+                  <div style={{ background: THEME.redBg, border: `1px solid ${THEME.redBorder}`, borderRadius: 12, padding: 16, marginBottom: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#E24B4A" }} />
+                      <span style={{ fontSize: 12, fontWeight: 700, color: THEME.red, textTransform: "uppercase", letterSpacing: "0.05em" }}>Issues — needs attention</span>
+                      <span style={{ fontSize: 11, color: THEME.red }}>{grouped.issue.length} unit{grouped.issue.length !== 1 ? "s" : ""}</span>
                     </div>
-                  );
-                })}
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {grouped.issue.map(u => (
+                        <button key={u.id} onClick={() => handleSelectUnit(u)}
+                          style={{ padding: "5px 14px", borderRadius: 20, border: `1.5px solid ${selectedUnit?.id === u.id ? THEME.blue : THEME.redBorder}`, background: selectedUnit?.id === u.id ? THEME.blueLight : THEME.white, color: selectedUnit?.id === u.id ? THEME.blue : THEME.red, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+                          {u.name}{u.notes ? ` — ${u.notes}` : ""}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* In progress */}
+                {grouped.in_progress.length > 0 && (
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#BA7517" }} />
+                      <span style={{ fontSize: 12, fontWeight: 600, color: THEME.text, textTransform: "uppercase", letterSpacing: "0.05em" }}>In progress</span>
+                      <span style={{ fontSize: 11, color: THEME.muted }}>{grouped.in_progress.length} units</span>
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {grouped.in_progress.map(u => (
+                        <button key={u.id} onClick={() => handleSelectUnit(u)}
+                          style={{ padding: "5px 14px", borderRadius: 20, border: `1.5px solid ${selectedUnit?.id === u.id ? THEME.blue : STATUS_CONFIG.in_progress.border}`, background: selectedUnit?.id === u.id ? THEME.blueLight : STATUS_CONFIG.in_progress.bg, color: selectedUnit?.id === u.id ? THEME.blue : STATUS_CONFIG.in_progress.color, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+                          {u.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Not started */}
+                {grouped.not_started.length > 0 && (
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#B4B2A9" }} />
+                      <span style={{ fontSize: 12, fontWeight: 600, color: THEME.text, textTransform: "uppercase", letterSpacing: "0.05em" }}>Not started</span>
+                      <span style={{ fontSize: 11, color: THEME.muted }}>{grouped.not_started.length} units</span>
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {grouped.not_started.map(u => (
+                        <button key={u.id} onClick={() => handleSelectUnit(u)}
+                          style={{ padding: "5px 14px", borderRadius: 20, border: `1.5px solid ${selectedUnit?.id === u.id ? THEME.blue : STATUS_CONFIG.not_started.border}`, background: selectedUnit?.id === u.id ? THEME.blueLight : STATUS_CONFIG.not_started.bg, color: selectedUnit?.id === u.id ? THEME.blue : STATUS_CONFIG.not_started.color, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+                          {u.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Done */}
+                {grouped.done.length > 0 && (
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#639922" }} />
+                      <span style={{ fontSize: 12, fontWeight: 600, color: THEME.text, textTransform: "uppercase", letterSpacing: "0.05em" }}>Done</span>
+                      <span style={{ fontSize: 11, color: THEME.muted }}>{grouped.done.length} units</span>
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {grouped.done.map(u => (
+                        <button key={u.id} onClick={() => handleSelectUnit(u)}
+                          style={{ padding: "5px 14px", borderRadius: 20, border: `1.5px solid ${selectedUnit?.id === u.id ? THEME.blue : STATUS_CONFIG.done.border}`, background: selectedUnit?.id === u.id ? THEME.blueLight : STATUS_CONFIG.done.bg, color: selectedUnit?.id === u.id ? THEME.blue : STATUS_CONFIG.done.color, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+                          {u.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Unit detail panel */}
@@ -266,7 +320,6 @@ export default function ArchitectDashboard() {
                       style={{ fontSize: 12, color: THEME.muted, background: "none", border: "none", cursor: "pointer" }}>✕</button>
                   </div>
 
-                  {/* Status update */}
                   <div style={{ marginBottom: 14 }}>
                     <div style={{ fontSize: 11, color: THEME.muted, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>Status</div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -279,7 +332,6 @@ export default function ArchitectDashboard() {
                     </div>
                   </div>
 
-                  {/* Customer note */}
                   <div style={{ borderTop: `1px solid ${THEME.border}`, paddingTop: 14, marginBottom: 14 }}>
                     <div style={{ fontSize: 11, color: THEME.muted, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>Customer update note</div>
                     <textarea value={editingNotes} onChange={e => setEditingNotes(e.target.value)}
@@ -292,7 +344,6 @@ export default function ArchitectDashboard() {
                     </button>
                   </div>
 
-                  {/* Task list */}
                   <div style={{ borderTop: `1px solid ${THEME.border}`, paddingTop: 14, marginBottom: 14 }}>
                     <div style={{ fontSize: 11, color: THEME.muted, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>Tasks ({unitTasks.length})</div>
                     <div style={{ maxHeight: 200, overflowY: "auto", display: "flex", flexDirection: "column", gap: 4 }}>
@@ -305,7 +356,6 @@ export default function ArchitectDashboard() {
                     </div>
                   </div>
 
-                  {/* Add custom task */}
                   <div style={{ borderTop: `1px solid ${THEME.border}`, paddingTop: 14 }}>
                     <div style={{ fontSize: 11, color: THEME.muted, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>Add custom task</div>
                     <input value={newTask} onChange={e => setNewTask(e.target.value)}
@@ -367,7 +417,7 @@ export default function ArchitectDashboard() {
                   )}
                   {r.tasks_completed?.length > 0 && (
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
-                      {r.tasks_completed.map((t, i) => (
+                      {[...new Map(r.tasks_completed.map(t => [t.task, t])).values()].map((t, i) => (
                         <span key={i} style={{ fontSize: 11, padding: "2px 8px", borderRadius: 10, background: THEME.greenBg, color: THEME.green, border: `1px solid ${THEME.greenBorder}` }}>✓ {t.task}</span>
                       ))}
                     </div>

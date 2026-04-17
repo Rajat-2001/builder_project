@@ -72,8 +72,9 @@ export default function SupervisorDashboard() {
   };
 
   // Workers currently active
-  const activeWorkers = reports.filter(r => !r.total_hours);
-  const completedToday = reports.filter(r => r.total_hours);
+const today = new Date().toISOString().split("T")[0];
+const activeWorkers = reports.filter(r => !r.total_hours && r.session_date === today);
+const completedToday = reports.filter(r => r.total_hours && r.session_date === today);
 
   const grouped = {
     issue:       units.filter(u => u.status === "issue"),
@@ -358,7 +359,7 @@ export default function SupervisorDashboard() {
                   )}
                   {r.tasks_completed?.length > 0 && (
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
-                      {r.tasks_completed.map((t, i) => (
+                      {[...new Map(r.tasks_completed.map(t => [t.task, t])).values()].map((t, i) => (
                         <span key={i} style={{ fontSize: 11, padding: "2px 8px", borderRadius: 10, background: THEME.greenBg, color: THEME.green, border: `1px solid ${THEME.greenBorder}` }}>✓ {t.task}</span>
                       ))}
                     </div>

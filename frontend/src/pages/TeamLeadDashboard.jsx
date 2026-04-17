@@ -424,7 +424,6 @@
 //   footerItem:  { fontSize:"12px", color:"#666", cursor:"pointer" },
 // };
 
-
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { getUnits, updateUnitStatus, addUnitTask } from "../api/units";
@@ -437,7 +436,6 @@ const THEME = {
   green: "#057642", greenBg: "#EAF3DE", greenBorder: "#C0DD97",
   amber: "#854F0B", amberBg: "#FFF3E0", amberBorder: "#FAC775",
   red: "#A32D2D", redBg: "#FCEBEB", redBorder: "#F7C1C1",
-  grayBg: "#F3F2EF", grayBorder: "#E0DFDC",
 };
 
 const STATUS_CONFIG = {
@@ -456,30 +454,23 @@ export default function TeamLeadDashboard() {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("units");
 
-  // Session
   const [session, setSession] = useState(null);
   const [timer, setTimer] = useState("00:00:00");
   const timerRef = useRef(null);
 
-  // Projects + units
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [units, setUnits] = useState([]);
   const [filter, setFilter] = useState("all");
   const [selectedUnit, setSelectedUnit] = useState(null);
 
-  // Reports
   const [reports, setReports] = useState([]);
   const [reportsLoading, setReportsLoading] = useState(false);
-
-  // Summary
   const [summary, setSummary] = useState([]);
 
-  // Custom task form
   const [newTask, setNewTask] = useState("");
   const [newTaskCat, setNewTaskCat] = useState("general");
 
-  // UI
   const [msg, setMsg] = useState(null);
   const [loading, setLoading] = useState(false);
   const [workedUnitIds, setWorkedUnitIds] = useState([]);
@@ -512,9 +503,8 @@ export default function TeamLeadDashboard() {
 
   useEffect(() => {
     if (!selectedProject) return;
-    const pid = selectedProject.id;
-    getUnits(pid).then(setUnits).catch(() => {});
-    if (activeTab === "reports") loadReports(pid);
+    getUnits(selectedProject.id).then(setUnits).catch(() => {});
+    if (activeTab === "reports") loadReports(selectedProject.id);
   }, [selectedProject]);
 
   const loadReports = async (pid) => {
@@ -583,9 +573,9 @@ export default function TeamLeadDashboard() {
 
   const filteredUnits = units.filter(u =>
     filter === "all" ||
-    (filter === "housing" && u.unit_type === "housing") ||
+    (filter === "housing"   && u.unit_type === "housing") ||
     (filter === "ancillary" && u.unit_type === "ancillary") ||
-    (filter === "carport" && u.unit_type === "carport") ||
+    (filter === "carport"   && u.unit_type === "carport") ||
     (filter === "technical" && u.unit_type === "technical")
   );
 
@@ -627,16 +617,14 @@ export default function TeamLeadDashboard() {
       {/* Check in bar */}
       <div style={{ background: THEME.white, borderBottom: `1px solid ${THEME.border}` }}>
         <div style={{ maxWidth: 1128, margin: "0 auto", padding: "10px 20px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <select
-            value={selectedProject?.id || ""}
+          <select value={selectedProject?.id || ""}
             onChange={e => {
               const p = projects.find(p => p.id === e.target.value);
               setSelectedProject(p);
               setSelectedUnit(null);
             }}
             disabled={!!session}
-            style={{ fontSize: 13, padding: "6px 10px", borderRadius: 8, border: `1px solid ${THEME.border}`, background: THEME.bg, color: THEME.text, fontFamily: "Inter, sans-serif" }}
-          >
+            style={{ fontSize: 13, padding: "6px 10px", borderRadius: 8, border: `1px solid ${THEME.border}`, background: THEME.bg, color: THEME.text, fontFamily: "Inter, sans-serif" }}>
             {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
 
@@ -674,10 +662,10 @@ export default function TeamLeadDashboard() {
         {/* Stats */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10, marginBottom: 20 }}>
           {[
-            { label: "Total hours",         value: `${totalHours.toFixed(1)}h` },
-            { label: "Units in progress",   value: units.filter(u => u.status === "in_progress").length },
-            { label: "Units done",          value: units.filter(u => u.status === "done").length },
-            { label: "Issues",              value: units.filter(u => u.status === "issue").length },
+            { label: "Total hours",       value: `${totalHours.toFixed(1)}h` },
+            { label: "Units in progress", value: units.filter(u => u.status === "in_progress").length },
+            { label: "Units done",        value: units.filter(u => u.status === "done").length },
+            { label: "Issues",            value: units.filter(u => u.status === "issue").length },
           ].map(({ label, value }) => (
             <div key={label} style={{ background: THEME.white, border: `1px solid ${THEME.border}`, borderRadius: 10, padding: "12px 16px" }}>
               <div style={{ fontSize: 11, color: THEME.muted, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>{label}</div>
@@ -710,36 +698,94 @@ export default function TeamLeadDashboard() {
 
             <div style={{ display: "grid", gridTemplateColumns: selectedUnit ? "1fr 360px" : "1fr", gap: 16 }}>
               <div>
-                {Object.entries(grouped).map(([status, unitList]) => {
-                  if (unitList.length === 0) return null;
-                  const cfg = STATUS_CONFIG[status];
-                  return (
-                    <div key={status} style={{ marginBottom: 16 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: cfg.dot }} />
-                        <span style={{ fontSize: 12, fontWeight: 600, color: THEME.text, textTransform: "uppercase", letterSpacing: "0.05em" }}>{cfg.label}</span>
-                        <span style={{ fontSize: 11, color: THEME.muted }}>{unitList.length} unit{unitList.length !== 1 ? "s" : ""}</span>
-                      </div>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                        {unitList.map(u => (
-                          <button key={u.id} onClick={() => setSelectedUnit(u)}
-                            style={{ padding: "5px 14px", borderRadius: 20, border: `1.5px solid ${selectedUnit?.id === u.id ? THEME.blue : cfg.border}`, background: selectedUnit?.id === u.id ? THEME.blueLight : cfg.bg, color: selectedUnit?.id === u.id ? THEME.blue : cfg.color, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
-                            {u.name}
-                          </button>
-                        ))}
-                      </div>
+                {/* Issues first */}
+                {grouped.issue.length > 0 && (
+                  <div style={{ background: THEME.redBg, border: `1px solid ${THEME.redBorder}`, borderRadius: 12, padding: 16, marginBottom: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#E24B4A" }} />
+                      <span style={{ fontSize: 12, fontWeight: 700, color: THEME.red, textTransform: "uppercase", letterSpacing: "0.05em" }}>Issues — needs attention</span>
+                      <span style={{ fontSize: 11, color: THEME.red }}>{grouped.issue.length} unit{grouped.issue.length !== 1 ? "s" : ""}</span>
                     </div>
-                  );
-                })}
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {grouped.issue.map(u => (
+                        <button key={u.id} onClick={() => setSelectedUnit(u)}
+                          style={{ padding: "5px 14px", borderRadius: 20, border: `1.5px solid ${selectedUnit?.id === u.id ? THEME.blue : THEME.redBorder}`, background: selectedUnit?.id === u.id ? THEME.blueLight : THEME.white, color: selectedUnit?.id === u.id ? THEME.blue : THEME.red, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+                          {u.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* In progress */}
+                {grouped.in_progress.length > 0 && (
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#BA7517" }} />
+                      <span style={{ fontSize: 12, fontWeight: 600, color: THEME.text, textTransform: "uppercase", letterSpacing: "0.05em" }}>In progress</span>
+                      <span style={{ fontSize: 11, color: THEME.muted }}>{grouped.in_progress.length} units</span>
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {grouped.in_progress.map(u => (
+                        <button key={u.id} onClick={() => setSelectedUnit(u)}
+                          style={{ padding: "5px 14px", borderRadius: 20, border: `1.5px solid ${selectedUnit?.id === u.id ? THEME.blue : STATUS_CONFIG.in_progress.border}`, background: selectedUnit?.id === u.id ? THEME.blueLight : STATUS_CONFIG.in_progress.bg, color: selectedUnit?.id === u.id ? THEME.blue : STATUS_CONFIG.in_progress.color, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+                          {u.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Not started */}
+                {grouped.not_started.length > 0 && (
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#B4B2A9" }} />
+                      <span style={{ fontSize: 12, fontWeight: 600, color: THEME.text, textTransform: "uppercase", letterSpacing: "0.05em" }}>Not started</span>
+                      <span style={{ fontSize: 11, color: THEME.muted }}>{grouped.not_started.length} units</span>
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {grouped.not_started.map(u => (
+                        <button key={u.id} onClick={() => setSelectedUnit(u)}
+                          style={{ padding: "5px 14px", borderRadius: 20, border: `1.5px solid ${selectedUnit?.id === u.id ? THEME.blue : STATUS_CONFIG.not_started.border}`, background: selectedUnit?.id === u.id ? THEME.blueLight : STATUS_CONFIG.not_started.bg, color: selectedUnit?.id === u.id ? THEME.blue : STATUS_CONFIG.not_started.color, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+                          {u.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Done */}
+                {grouped.done.length > 0 && (
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#639922" }} />
+                      <span style={{ fontSize: 12, fontWeight: 600, color: THEME.text, textTransform: "uppercase", letterSpacing: "0.05em" }}>Done</span>
+                      <span style={{ fontSize: 11, color: THEME.muted }}>{grouped.done.length} units</span>
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {grouped.done.map(u => (
+                        <button key={u.id} onClick={() => setSelectedUnit(u)}
+                          style={{ padding: "5px 14px", borderRadius: 20, border: `1.5px solid ${selectedUnit?.id === u.id ? THEME.blue : STATUS_CONFIG.done.border}`, background: selectedUnit?.id === u.id ? THEME.blueLight : STATUS_CONFIG.done.bg, color: selectedUnit?.id === u.id ? THEME.blue : STATUS_CONFIG.done.color, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+                          {u.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Unit detail + controls */}
+              {/* Unit detail panel */}
               {selectedUnit && (
                 <div style={{ background: THEME.white, border: `1px solid ${THEME.border}`, borderRadius: 12, padding: 16, alignSelf: "start" }}>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: THEME.text, marginBottom: 14 }}>{selectedUnit.name}</div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: THEME.text }}>{selectedUnit.name}</div>
+                    <button onClick={() => setSelectedUnit(null)}
+                      style={{ fontSize: 12, color: THEME.muted, background: "none", border: "none", cursor: "pointer" }}>✕</button>
+                  </div>
 
                   <div style={{ marginBottom: 14 }}>
-                    <div style={{ fontSize: 12, color: THEME.muted, marginBottom: 6 }}>Update status</div>
+                    <div style={{ fontSize: 11, color: THEME.muted, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>Update status</div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                       {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
                         <button key={key} onClick={() => handleStatusChange(selectedUnit.id, key)}
@@ -751,7 +797,7 @@ export default function TeamLeadDashboard() {
                   </div>
 
                   <div style={{ borderTop: `1px solid ${THEME.border}`, paddingTop: 14, marginBottom: 14 }}>
-                    <div style={{ fontSize: 12, color: THEME.muted, marginBottom: 8 }}>Add custom task</div>
+                    <div style={{ fontSize: 11, color: THEME.muted, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>Add custom task</div>
                     <input value={newTask} onChange={e => setNewTask(e.target.value)} placeholder="Task name..."
                       style={{ width: "100%", padding: "7px 10px", borderRadius: 8, border: `1px solid ${THEME.border}`, fontSize: 12, fontFamily: "Inter, sans-serif", marginBottom: 6 }} />
                     <select value={newTaskCat} onChange={e => setNewTaskCat(e.target.value)}
@@ -767,7 +813,7 @@ export default function TeamLeadDashboard() {
                   </div>
 
                   <div style={{ fontSize: 11, color: THEME.muted, textAlign: "center" }}>
-                    Click a unit tag to select it, then update its status or add custom tasks.
+                    Click a unit to select it, then update its status or add custom tasks.
                   </div>
                 </div>
               )}
@@ -777,7 +823,7 @@ export default function TeamLeadDashboard() {
 
         {/* Reports tab */}
         {activeTab === "reports" && (
-          <div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {reportsLoading ? (
               <div style={{ textAlign: "center", padding: 40, color: THEME.muted }}>Loading reports...</div>
             ) : reports.length === 0 ? (
@@ -785,86 +831,50 @@ export default function TeamLeadDashboard() {
                 No work reports submitted yet for this project.
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {/* {reports.map(r => (
-                  <div key={r.session_id} style={{ background: THEME.white, border: `1px solid ${THEME.border}`, borderRadius: 12, padding: 16 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+              reports.map(r => (
+                <div key={r.session_id} style={{ background: THEME.white, border: `1px solid ${THEME.border}`, borderRadius: 12, padding: 16 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: THEME.blueLight, color: THEME.blue, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700 }}>
+                        {r.worker?.charAt(0).toUpperCase()}
+                      </div>
                       <div>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: THEME.text }}>{r.worker}</span>
-                        <span style={{ fontSize: 12, color: THEME.muted, marginLeft: 8 }}>{r.session_date}</span>
-                      </div>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: THEME.blue }}>{r.total_hours ? `${r.total_hours}h` : "Active"}</span>
-                    </div>
-
-                    {r.units_worked?.length > 0 && (
-                      <div style={{ marginBottom: 8 }}>
-                        <span style={{ fontSize: 11, color: THEME.muted }}>Units: </span>
-                        {r.units_worked.map(u => (
-                          <span key={u.id} style={{ fontSize: 11, padding: "2px 8px", borderRadius: 10, background: THEME.blueLight, color: THEME.blue, marginLeft: 4 }}>{u.name}</span>
-                        ))}
-                      </div>
-                    )}
-
-                    {r.tasks_completed?.length > 0 && (
-                      <div>
-                        <div style={{ fontSize: 11, color: THEME.muted, marginBottom: 4 }}>Tasks completed:</div>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                          {r.tasks_completed.map((t, i) => (
-                            <span key={i} style={{ fontSize: 11, padding: "2px 8px", borderRadius: 10, background: THEME.greenBg, color: THEME.green, border: `1px solid ${THEME.greenBorder}` }}>✓ {t.task}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))} */}
-                {reports.map(r => (
-                  <div key={r.session_id} style={{ background: THEME.white, border: `1px solid ${THEME.border}`, borderRadius: 12, padding: 16 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div style={{ width: 32, height: 32, borderRadius: "50%", background: THEME.blueLight, color: THEME.blue, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700 }}>
-                          {r.worker?.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: THEME.text }}>{r.worker}</div>
-                          <div style={{ fontSize: 11, color: THEME.muted }}>{r.session_date}</div>
-                        </div>
-                      </div>
-                      <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: THEME.blue }}>
-                          {r.total_hours ? `${r.total_hours}h logged` : "Currently on site"}
-                        </div>
-                        <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 10, background: r.total_hours ? THEME.greenBg : THEME.amberBg, color: r.total_hours ? THEME.green : THEME.amber, border: `1px solid ${r.total_hours ? THEME.greenBorder : THEME.amberBorder}` }}>
-                          {r.total_hours ? "Completed" : "Active"}
-                        </span>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: THEME.text }}>{r.worker}</div>
+                        <div style={{ fontSize: 11, color: THEME.muted }}>{r.session_date}</div>
                       </div>
                     </div>
-
-                    {r.units_worked?.length > 0 && (
-                      <div style={{ marginBottom: 8 }}>
-                        <span style={{ fontSize: 11, color: THEME.muted }}>Units worked on: </span>
-                        {[...new Map(r.units_worked.map(u => [u.id, u])).values()].map(u => (
-                          <span key={u.id} style={{ fontSize: 11, padding: "2px 8px", borderRadius: 10, background: THEME.blueLight, color: THEME.blue, marginLeft: 4 }}>{u.name}</span>
-                        ))}
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: THEME.blue }}>
+                        {r.total_hours ? `${r.total_hours}h logged` : "Currently on site"}
                       </div>
-                    )}
-
-                    {r.tasks_completed?.length > 0 && (
-                      <div>
-                        <div style={{ fontSize: 11, color: THEME.muted, marginBottom: 4 }}>Tasks completed:</div>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                          {r.tasks_completed.map((t, i) => (
-                            <span key={i} style={{ fontSize: 11, padding: "2px 8px", borderRadius: 10, background: THEME.greenBg, color: THEME.green, border: `1px solid ${THEME.greenBorder}` }}>✓ {t.task}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {r.tasks_completed?.length === 0 && r.units_worked?.length === 0 && (
-                      <div style={{ fontSize: 12, color: THEME.muted, fontStyle: "italic" }}>No tasks submitted yet for this session.</div>
-                    )}
+                      <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 10, background: r.total_hours ? THEME.greenBg : THEME.amberBg, color: r.total_hours ? THEME.green : THEME.amber, border: `1px solid ${r.total_hours ? THEME.greenBorder : THEME.amberBorder}` }}>
+                        {r.total_hours ? "Completed" : "Active"}
+                      </span>
+                    </div>
                   </div>
-                ))}
-              </div>
+
+                  {r.units_worked?.length > 0 && (
+                    <div style={{ marginBottom: 8 }}>
+                      <span style={{ fontSize: 11, color: THEME.muted }}>Units worked on: </span>
+                      {[...new Map(r.units_worked.map(u => [u.id, u])).values()].map(u => (
+                        <span key={u.id} style={{ fontSize: 11, padding: "2px 8px", borderRadius: 10, background: THEME.blueLight, color: THEME.blue, marginLeft: 4 }}>{u.name}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  {r.tasks_completed?.length > 0 && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
+                      {[...new Map(r.tasks_completed.map(t => [t.task, t])).values()].map((t, i) => (
+                        <span key={i} style={{ fontSize: 11, padding: "2px 8px", borderRadius: 10, background: THEME.greenBg, color: THEME.green, border: `1px solid ${THEME.greenBorder}` }}>✓ {t.task}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  {r.tasks_completed?.length === 0 && r.units_worked?.length === 0 && (
+                    <div style={{ fontSize: 12, color: THEME.muted, fontStyle: "italic" }}>No tasks submitted yet for this session.</div>
+                  )}
+                </div>
+              ))
             )}
           </div>
         )}
