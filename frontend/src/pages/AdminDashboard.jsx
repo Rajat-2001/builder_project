@@ -387,7 +387,7 @@ export default function AdminDashboard() {
                           </td>
                           <td style={s.td}>
                             <span style={{fontSize:"12px", fontWeight:"600", padding:"3px 10px", borderRadius:"12px", backgroundColor:u.is_active?"#F0FAF5":"#FFF0F0", border:`1px solid ${u.is_active?"#B8DFC9":"#FFCCCC"}`, color:u.is_active?"#057642":"#CC1016"}}>
-                              {u.is_active ? "Active" : "Inactive"}
+                              {u.is_active ? "Enabled" : "Disabled"}
                             </span>
                           </td>
                           <td style={s.td}>{new Date(u.created_at).toLocaleDateString("en-IN", {day:"numeric", month:"short", year:"numeric"})}</td>

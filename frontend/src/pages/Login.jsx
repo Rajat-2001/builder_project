@@ -544,7 +544,7 @@
 // };
 
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { loginUser } from "../api/auth";
@@ -560,15 +560,19 @@ export default function Login() {
   const [focused,  setFocused]  = useState("");
 
   // If already logged in redirect to dashboard immediately
+  // If already logged in redirect to dashboard immediately
+useEffect(() => {
   if (isAuthenticated && user) {
     switch (user.role) {
-      case "admin":     navigate("/admin",    { replace: true }); break;
-      case "team_lead": navigate("/team",     { replace: true }); break;
-      case "worker":    navigate("/worker",   { replace: true }); break;
-      case "customer":  navigate("/customer", { replace: true }); break;
-      case "architect": navigate("/team",     { replace: true }); break;
+      case "admin":      navigate("/admin",      { replace: true }); break;
+      case "team_lead":  navigate("/team",       { replace: true }); break;
+      case "worker":     navigate("/worker",     { replace: true }); break;
+      case "customer":   navigate("/customer",   { replace: true }); break;
+      case "architect":  navigate("/architect",  { replace: true }); break;
+      case "supervisor": navigate("/supervisor", { replace: true }); break;
     }
   }
+}, [isAuthenticated, user]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
