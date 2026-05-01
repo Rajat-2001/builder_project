@@ -375,23 +375,27 @@ export default function SiteDashboard() {
                   {user?.phone && <div style={{ fontSize:12, color:"#666", marginBottom:14 }}>{user.phone}</div>}
 
                   {/* Hours per project */}
-                  <div style={{ borderTop:`1px solid ${C.border}`, paddingTop:13 }}>
-                    <div style={{ fontSize:10, fontWeight:700, color:"#aaa", letterSpacing:.5, marginBottom:9 }}>HOURS WORKED</div>
-                    {summary.length === 0 ? (
-                      <div style={{ fontSize:13, color:"#aaa", fontStyle:"italic" }}>No hours logged yet.</div>
-                    ) : (
-                      summary.map(r => (
-                        <div key={r.project_id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"6px 0", borderBottom:`1px solid #F5F5F3` }}>
-                          <span style={{ fontSize:13, color:"#555" }}>{r.project_name || projects.find(p=>p.id===r.project_id)?.name || "Project"}</span>
-                          <span style={{ fontSize:13, fontWeight:700, color:C.text }}>{(r.total_hours||0).toFixed(1)}h</span>
+                  {/* Hours per project — hidden for admin and architect */}
+                    {!["admin","architect"].includes(role) && (
+                    <div style={{ borderTop:`1px solid ${C.border}`, paddingTop:13 }}>
+                        <div style={{ fontSize:10, fontWeight:700, color:"#aaa", letterSpacing:.5, marginBottom:9 }}>HOURS WORKED</div>
+                        {summary.length === 0 ? (
+                        <div style={{ fontSize:13, color:"#aaa", fontStyle:"italic" }}>No hours logged yet.</div>
+                        ) : (
+                        summary.map(r => (
+                            <div key={r.project_id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"6px 0", borderBottom:`1px solid #F5F5F3` }}>
+                            <span style={{ fontSize:13, color:"#555" }}>{r.project_name || projects.find(p=>p.id===r.project_id)?.name || "Project"}</span>
+                            <span style={{ fontSize:13, fontWeight:700, color:C.text }}>{(r.total_hours||0).toFixed(1)}h</span>
+                            </div>
+                        ))
+                        )}
+                        <div style={{ display:"flex", justifyContent:"space-between", padding:"11px 0 3px", fontWeight:800, fontSize:14 }}>
+                        <span>Total</span>
+                        <span style={{ color:C.blue }}>{totalHours.toFixed(1)}h</span>
                         </div>
-                      ))
-                    )}
-                    <div style={{ display:"flex", justifyContent:"space-between", padding:"11px 0 3px", fontWeight:800, fontSize:14 }}>
-                      <span>Total</span>
-                      <span style={{ color:C.blue }}>{totalHours.toFixed(1)}h</span>
                     </div>
-                  </div>
+                    )}
+                   
                 </div>
               </div>
             )}
