@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import { getUnits, getUnit, updateUnitStatus } from "../api/units";
-import { clockIn, clockOut, getSessionStatus, getMySummary } from "../api/sessions";
+import { getUnits, getUnit, updateUnitStatus, addUnitTask, updateUnitNotes } from "../api/units";
+import { clockIn, clockOut, getSessionStatus, getMySummary, getTeamReports } from "../api/sessions";
+import { getMyBonus } from "../api/bonus";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const BASE = "http://localhost:8000";
@@ -133,9 +134,21 @@ function UnitBlock({ unit, height, fontSize, onClick }) {
   );
 }
 
+function formatDuration(clockIn, clockOut) {
+  if (!clockIn || !clockOut) return "Active";
+  const secs = Math.floor((new Date(clockOut) - new Date(clockIn)) / 1000);
+  if (secs < 60) return `${secs}s`;
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  const remMins = mins % 60;
+  if (remMins === 0) return `${hrs}h`;
+  return `${hrs}h ${remMins}m`;
+}
+
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function SiteDashboard() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const role = user?.role || "worker";
   const canClock = CLOCK_ROLES.includes(role);
 
@@ -158,6 +171,7 @@ export default function SiteDashboard() {
 
   // Summary (hours per project for profile card)
   const [summary, setSummary]       = useState([]);
+  const [bonusHours, setBonusHours] = useState(0);
 
   // UI toggles
   const [wing, setWing]   = useState(1);
@@ -207,10 +221,15 @@ export default function SiteDashboard() {
 
   // ── Fetch hours summary for profile card
   useEffect(() => {
-    getMySummary()
-      .then(data => setSummary(Array.isArray(data) ? data : []))
+  getMySummary()
+    .then(data => setSummary(Array.isArray(data) ? data : []))
+    .catch(() => {});
+  if (!["admin","architect"].includes(role)) {
+    getMyBonus()
+      .then(data => setBonusHours(data?.total_bonus_hours || 0))
       .catch(() => {});
-  }, []);
+  }
+}, []);
 
   // ── Fetch units when project changes
   useEffect(() => {
@@ -289,6 +308,17 @@ export default function SiteDashboard() {
   function switchWing(w) { setWing(w); setZ1(false); setZ2(false); }
 
   // ── VIEW ROUTING ─────────────────────────────────────────────────────────────
+  if (view === "reports") {
+  return (
+    <ReportsView
+      projectId={selectedProject?.id}
+      projectName={selectedProject?.name}
+      role={role}
+      onBack={() => setView("dash")}
+    />
+  );
+}
+  
   if (view === "table") {
     return (
       <WorkTableView
@@ -315,6 +345,25 @@ export default function SiteDashboard() {
             setSelectedUnit(prev => prev ? {...prev, status: newStatus} : prev);
             } catch (err) {
             console.error("Status update failed:", err);
+            }
+        }}
+        onAddTask={async (unitId, taskName) => {
+            try {
+            await addUnitTask(unitId, { name: taskName, category: "special" });
+            const updated = await getUnit(unitId);
+            const detail = updated.unit ? { ...updated.unit, tasks: updated.tasks } : updated;
+            setUnitDetail(detail);
+            } catch (err) {
+            console.error("Add task failed:", err);
+            }
+        }}
+        onSaveNotes={async (unitId, notes) => {
+            try {
+            await updateUnitNotes(unitId, notes);
+            setUnitDetail(prev => prev ? {...prev, notes} : prev);
+            setUnits(prev => prev.map(u => u.id === unitId ? {...u, notes} : u));
+            } catch (err) {
+            console.error("Save notes failed:", err);
             }
         }}
         />
@@ -360,45 +409,67 @@ export default function SiteDashboard() {
               </div>
               <span style={{ fontSize:11, color:"#bbb" }}>{pOpen?"▲":"▼"}</span>
             </button>
-
+            
             {/* Profile card */}
-            {pOpen && (
-              <div style={{ position:"absolute", top:54, right:0, width:290, background:C.white, border:`1px solid ${C.border}`, borderRadius:12, boxShadow:"0 8px 28px rgba(0,0,0,.14)", zIndex:100, overflow:"hidden" }}>
-                <div style={{ height:52, background:C.blue }} />
-                <div style={{ padding:"0 18px 20px" }}>
-                  <div style={{ width:56, height:56, borderRadius:"50%", background:C.blueLt, border:`3px solid ${C.white}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontWeight:800, color:C.blue, marginTop:-28, marginBottom:10 }}>
-                    {user?.name ? user.name.slice(0,2).toUpperCase() : "👤"}
-                  </div>
-                  <div style={{ fontWeight:700, fontSize:16, color:C.text, marginBottom:2 }}>{user?.name || user?.phone || "—"}</div>
-                  <div style={{ fontSize:12, color:"#666", marginBottom:2, textTransform:"capitalize" }}>{role?.replace("_"," ")}</div>
-                  {user?.email && <div style={{ fontSize:12, color:C.blue, marginBottom:2 }}>{user.email}</div>}
-                  {user?.phone && <div style={{ fontSize:12, color:"#666", marginBottom:14 }}>{user.phone}</div>}
 
-                  {/* Hours per project */}
-                  {/* Hours per project — hidden for admin and architect */}
-                    {!["admin","architect"].includes(role) && (
-                    <div style={{ borderTop:`1px solid ${C.border}`, paddingTop:13 }}>
-                        <div style={{ fontSize:10, fontWeight:700, color:"#aaa", letterSpacing:.5, marginBottom:9 }}>HOURS WORKED</div>
-                        {summary.length === 0 ? (
-                        <div style={{ fontSize:13, color:"#aaa", fontStyle:"italic" }}>No hours logged yet.</div>
-                        ) : (
-                        summary.map(r => (
-                            <div key={r.project_id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"6px 0", borderBottom:`1px solid #F5F5F3` }}>
-                            <span style={{ fontSize:13, color:"#555" }}>{r.project_name || projects.find(p=>p.id===r.project_id)?.name || "Project"}</span>
-                            <span style={{ fontSize:13, fontWeight:700, color:C.text }}>{(r.total_hours||0).toFixed(1)}h</span>
-                            </div>
-                        ))
-                        )}
-                        <div style={{ display:"flex", justifyContent:"space-between", padding:"11px 0 3px", fontWeight:800, fontSize:14 }}>
-                        <span>Total</span>
-                        <span style={{ color:C.blue }}>{totalHours.toFixed(1)}h</span>
-                        </div>
+                {pOpen && (
+                <div style={{ position:"absolute", top:54, right:0, width:290, background:C.white, border:`1px solid ${C.border}`, borderRadius:12, boxShadow:"0 8px 28px rgba(0,0,0,.14)", zIndex:100, overflow:"hidden" }}>
+                    <div style={{ height:52, background:C.blue }} />
+                    <div style={{ padding:"0 18px 20px" }}>
+                    <div style={{ width:56, height:56, borderRadius:"50%", background:C.blueLt, border:`3px solid ${C.white}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontWeight:800, color:C.blue, marginTop:-28, marginBottom:10 }}>
+                        {user?.name ? user.name.slice(0,2).toUpperCase() : user?.full_name ? user.full_name.slice(0,2).toUpperCase() : "👤"}
                     </div>
+
+                    <div style={{ fontWeight:700, fontSize:16, color:C.text, marginBottom:2 }}>{user?.name || user?.full_name || "—"}</div>
+                    <div style={{ fontSize:12, color:"#888", marginBottom:2, textTransform:"capitalize" }}>{role?.replace("_"," ")}</div>
+                    {user?.email && <div style={{ fontSize:12, color:C.blue, marginBottom:2 }}>{user.email}</div>}
+                    {user?.phone && <div style={{ fontSize:12, color:"#666", marginBottom:10 }}>{user.phone}</div>}
+
+                    {checkedIn && checkInTime && (
+                        <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:12, padding:"6px 10px", background:"#F0FAF5", borderRadius:8, border:"1px solid #B8DFC9" }}>
+                        <span style={{ width:8, height:8, borderRadius:"50%", background:"#22C55E", display:"inline-block" }} />
+                        <span style={{ fontSize:12, fontWeight:600, color:"#057642" }}>On site since {fmtTime(checkInTime)}</span>
+                        </div>
                     )}
-                   
+
+                    {!["admin","architect"].includes(role) && (
+                        <div style={{ borderTop:`1px solid ${C.border}`, paddingTop:12, marginTop:4 }}>
+                        <div style={{ fontSize:10, fontWeight:700, color:"#aaa", letterSpacing:.5, marginBottom:8 }}>HOURS WORKED</div>
+                        {summary.length === 0 ? (
+                            <div style={{ fontSize:13, color:"#aaa", fontStyle:"italic" }}>No hours logged yet.</div>
+                        ) : (
+                            summary.map(r => (
+                            <div key={r.project_id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 0", borderBottom:`1px solid #F5F5F3` }}>
+                                <span style={{ fontSize:13, color:"#555" }}>{r.project_name || projects.find(p=>p.id===r.project_id)?.name || "Project"}</span>
+                                <span style={{ fontSize:13, fontWeight:700, color:C.text }}>{(r.total_hours||0).toFixed(1)}h</span>
+                            </div>
+                            ))
+                        )}
+                        <div style={{ display:"flex", justifyContent:"space-between", padding:"8px 0 3px", fontWeight:800, fontSize:14, borderTop:`1px solid ${C.border}`, marginTop:4 }}>
+                            <span>Total</span>
+                            <span style={{ color:C.blue }}>{totalHours.toFixed(1)}h</span>
+                        </div>
+                        {bonusHours > 0 && (
+                            <div style={{ display:"flex", justifyContent:"space-between", padding:"5px 0" }}>
+                            <span style={{ fontSize:13, color:"#057642", fontWeight:500 }}>Bonus hours</span>
+                            <span style={{ fontSize:13, fontWeight:700, color:"#057642" }}>+{bonusHours.toFixed(1)}h</span>
+                            </div>
+                        )}
+                        </div>
+                    )}
+
+                    <button
+                        onClick={logout}
+                        style={{ width:"100%", padding:"9px 0", background:"transparent", border:`1px solid ${C.border}`, borderRadius:20, fontSize:13, fontWeight:600, color:"#666", cursor:"pointer", fontFamily:"inherit", marginTop:14 }}
+                        onMouseOver={e => { e.currentTarget.style.borderColor="#CC1016"; e.currentTarget.style.color="#CC1016"; }}
+                        onMouseOut={e => { e.currentTarget.style.borderColor=C.border; e.currentTarget.style.color="#666"; }}
+                    >
+                        Sign out
+                    </button>
+
+                    </div>
                 </div>
-              </div>
-            )}
+                )}
           </div>
         }
       />
@@ -452,8 +523,16 @@ export default function SiteDashboard() {
         </div>
 
         {/* Gewerk */}
-        <div style={{ flex:1, display:"flex", justifyContent:"flex-end", position:"relative" }}>
-          <button
+        <div style={{ flex:1, display:"flex", justifyContent:"flex-end", gap:8, position:"relative" }}>
+        {["supervisor","team_lead","architect","admin"].includes(role) && (
+            <button
+            onClick={() => { setView("reports"); setGOpen(false); setPOpen(false); }}
+            style={{ background:view==="reports"?"#EAF0F9":C.white, color:C.blue, border:`2px solid ${C.blue}`, borderRadius:20, fontWeight:600, fontSize:13, cursor:"pointer", padding:"8px 18px", fontFamily:"inherit" }}
+            >
+            Reports
+            </button>
+        )}
+        <button
             onClick={() => { setGOpen(o=>!o); setPOpen(false); }}
             style={{ background:gOpen?C.blueLt:C.white, color:C.blue, border:`2px solid ${C.blue}`, borderRadius:20, fontWeight:600, fontSize:13, cursor:"pointer", padding:"8px 18px", fontFamily:"inherit" }}
           >
@@ -611,8 +690,13 @@ export default function SiteDashboard() {
 }
 
 // ─── UNIT DETAIL VIEW ─────────────────────────────────────────────────────────
-function UnitDetailView({ unit, role, projectName, onBack, onGewerkClick, onStatusChange }) {
+function UnitDetailView({ unit, role, projectName, onBack, onGewerkClick, onStatusChange, onAddTask, onSaveNotes }) {
     console.log("Unit detail:", unit);
+    const [newTaskName, setNewTaskName] = useState("");
+    const [addingTask, setAddingTask]   = useState(false);
+    const [taskMsg, setTaskMsg]         = useState("");
+    const [notesVal, setNotesVal]       = useState(unit?.notes || "");
+    const [notesSaved, setNotesSaved]   = useState(false);
   if (!unit) return (
     <div style={{ minHeight:"100vh", background:C.bg }}>
       <Navbar center={<span style={{ fontSize:14, fontWeight:600, color:"#666" }}>{projectName}</span>} right={<BackButton onClick={onBack} />} />
@@ -655,14 +739,19 @@ if (unit.unit_type === "technical") {
               <StatusDot status={unit.status} />
               <span style={{ fontWeight:700, color:STC[unit.status], fontSize:13 }}>{SL[unit.status]}</span>
             </div>
-            {["admin","architect","team_lead"].includes(role) && (
+            {["admin","architect","team_lead", "supervisor"].includes(role) && (
               <>
-                <div style={{ fontSize:10, fontWeight:700, color:"#aaa", letterSpacing:.5, marginBottom:9 }}>CHANGE STATUS</div>
-                {Object.entries(SL).map(([k,v]) => (
-                  <div key={k}
+                {/* <div style={{ fontSize:10, fontWeight:700, color:"#aaa", letterSpacing:.5, marginBottom:9 }}>CHANGE STATUS</div> */}
+                <div style={{ fontSize:10, fontWeight:700, color:"#aaa", letterSpacing:.5, marginBottom:9 }}>
+                {role === "supervisor" ? "FLAG AS ISSUE" : "CHANGE STATUS"}
+                </div>
+                {Object.entries(SL)
+                .filter(([k]) => role === "supervisor" ? k === "issue" : true)
+                .map(([k,v]) => (
+                <div key={k}
                     onClick={() => {
-                      const uid = unit?.id;
-                      if (uid) onStatusChange && onStatusChange(uid, k);
+                    const uid = unit?.id;
+                    if (uid) onStatusChange && onStatusChange(uid, k);
                     }}
                     style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 10px", borderRadius:8, cursor:"pointer", marginBottom:3, background:k===unit.status?SBG[k]:"transparent", border:`1px solid ${k===unit.status?SBD[k]:"transparent"}` }}
                     onMouseOver={e=>e.currentTarget.style.background=C.bg}
@@ -736,8 +825,90 @@ if (unit.unit_type === "technical") {
               <div style={{ fontSize:13, color:"#aaa" }}>Upload Document or Photo</div>
             </div>
             <div style={{ marginTop:12, padding:"12px 14px", background:C.bg, borderRadius:8, borderLeft:`3px solid ${C.blue}` }}>
-              <div style={{ fontSize:10, fontWeight:700, color:"#888", letterSpacing:.5, marginBottom:5 }}>NOTES</div>
-              <div style={{ fontSize:13, color:"#aaa", fontStyle:"italic" }}>{unit.notes || "No notes for this unit."}</div>
+            <div style={{ fontSize:13, color:"#aaa" }}>Upload Document or Photo</div>
+    </div>
+
+    {/* Custom tasks — architect, team_lead, admin only */}
+    {["architect","team_lead","admin"].includes(role) && (
+      <div style={{ marginTop:12, padding:"12px 14px", background:C.bg, borderRadius:8, borderLeft:`3px solid #057642` }}>
+        <div style={{ fontSize:10, fontWeight:700, color:"#888", letterSpacing:.5, marginBottom:8 }}>ADD CUSTOM TASK</div>
+        {!addingTask ? (
+          <button
+            onClick={() => setAddingTask(true)}
+            style={{ background:C.white, color:"#057642", border:"1px solid #B8DFC9", borderRadius:20, padding:"5px 14px", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}
+          >
+            + Add Task
+          </button>
+        ) : (
+          <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+            <input
+              value={newTaskName}
+              onChange={e => setNewTaskName(e.target.value)}
+              placeholder="Task name e.g. Extra waterproofing"
+              style={{ flex:1, padding:"7px 10px", fontSize:13, border:`1px solid ${C.border}`, borderRadius:8, fontFamily:"inherit", outline:"none" }}
+              onKeyDown={e => {
+                if (e.key === "Enter" && newTaskName.trim()) {
+                  onAddTask(unit.id, newTaskName.trim());
+                  setNewTaskName(""); setAddingTask(false);
+                  setTaskMsg("✓ Task added");
+                  setTimeout(() => setTaskMsg(""), 2000);
+                }
+              }}
+            />
+            <button
+              onClick={() => {
+                if (newTaskName.trim()) {
+                  onAddTask(unit.id, newTaskName.trim());
+                  setNewTaskName(""); setAddingTask(false);
+                  setTaskMsg("✓ Task added");
+                  setTimeout(() => setTaskMsg(""), 2000);
+                }
+              }}
+              style={{ background:"#057642", color:"#fff", border:"none", borderRadius:20, padding:"7px 16px", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}
+            >
+              Add
+            </button>
+            <button
+              onClick={() => { setAddingTask(false); setNewTaskName(""); }}
+              style={{ background:"transparent", color:"#aaa", border:"1px solid #E0DFDC", borderRadius:20, padding:"7px 14px", fontSize:12, cursor:"pointer", fontFamily:"inherit" }}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+        {taskMsg && <div style={{ fontSize:12, color:"#057642", fontWeight:600, marginTop:6 }}>{taskMsg}</div>}
+      </div>
+    )}
+
+    <div style={{ marginTop:12, padding:"12px 14px", background:C.bg, borderRadius:8, borderLeft:`3px solid ${C.blue}` }}>    
+  <div style={{ fontSize:10, fontWeight:700, color:"#888", letterSpacing:.5, marginBottom:5 }}>
+    NOTES {["architect","admin"].includes(role) ? <span style={{ color:"#aaa", fontWeight:400, textTransform:"none", fontSize:11 }}>(visible to customer)</span> : ""}
+  </div>
+  {["architect","admin"].includes(role) ? (
+    <div>
+      <textarea
+        value={notesVal}
+        onChange={e => { setNotesVal(e.target.value); setNotesSaved(false); }}
+        placeholder="Write customer-facing notes here..."
+        style={{ width:"100%", minHeight:80, padding:"8px 10px", fontSize:13, border:`1px solid ${C.border}`, borderRadius:8, fontFamily:"inherit", resize:"vertical", outline:"none", background:C.white }}
+      />
+      <div style={{ display:"flex", alignItems:"center", gap:10, marginTop:6 }}>
+                    <button
+                    onClick={async () => {
+                        await onSaveNotes(unit.id, notesVal);
+                        setNotesSaved(true);
+                        setTimeout(() => setNotesSaved(false), 2000);
+                    }}
+                    style={{ background:C.blue, color:"#fff", border:"none", borderRadius:20, padding:"6px 16px", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}
+                    >
+                    Save Notes
+                    </button>
+                    {notesSaved && <span style={{ fontSize:12, color:"#057642", fontWeight:600 }}>✓ Saved</span>}
+                </div>
+                </div>
+            ) : (
+                <div style={{ fontSize:13, color:"#aaa", fontStyle:"italic" }}>{unit.notes || "No notes for this unit."}</div>
+            )}
             </div>
           </div>
 
@@ -855,6 +1026,114 @@ function WorkTableView({ gewerk, unit, onBack }) {
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── REPORTS VIEW ─────────────────────────────────────────────────────────────
+function ReportsView({ projectId, projectName, projects, role, onBack }) {
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState("");
+
+  useEffect(() => {
+    if (!projectId) return;
+    getTeamReports(projectId)
+      .then(data => setReports(Array.isArray(data) ? data : []))
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [projectId]);
+
+  return (
+    <div style={{ minHeight:"100vh", background:C.bg }}>
+      <Navbar
+        center={<span style={{ fontSize:14, fontWeight:600, color:"#666" }}>{projectName} · Work Reports</span>}
+        right={<BackButton onClick={onBack} />}
+      />
+      <div style={{ padding:14 }}>
+        {loading ? (
+          <div style={{ textAlign:"center", padding:40, color:"#aaa" }}>Loading reports...</div>
+        ) : error ? (
+          <div style={{ textAlign:"center", padding:40, color:"#CC1016" }}>{error}</div>
+        ) : reports.length === 0 ? (
+          <div style={{ textAlign:"center", padding:40, color:"#aaa", background:C.white, borderRadius:10, border:`1px solid ${C.border}` }}>
+            No work reports submitted yet for this project.
+          </div>
+        ) : (
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+            {reports.map(r => {
+              const dedupedTasks = [...new Map((r.tasks_completed||[]).map(t => [t.task, t])).values()];
+              const projectLabel = projects?.find(p => p.id === String(r.project_id))?.name || projectName;
+              return (
+                <div key={r.session_id} style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:10, padding:16 }}>
+
+                  {/* Header */}
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:12 }}>
+
+                    {/* Left — worker info */}
+                    <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                      <div style={{ width:36, height:36, borderRadius:"50%", background:C.blueLt, border:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700, color:C.blue }}>
+                        {(r.worker||"?").charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight:700, fontSize:14, color:C.text }}>{r.worker}</div>
+                        <div style={{ fontSize:12, color:"#888", textTransform:"capitalize" }}>{r.worker_role?.replace("_"," ")}</div>
+                      </div>
+                    </div>
+
+                    {/* Right — project, date, time, hours */}
+                    <div style={{ textAlign:"right" }}>
+                      <div style={{ fontSize:12, fontWeight:700, color:C.blue, marginBottom:2 }}>{projectLabel}</div>
+                      <div style={{ fontSize:12, color:"#888" }}>{r.session_date}</div>
+                      <div style={{ fontSize:12, color:"#888" }}>
+                        {r.clock_in ? new Date(r.clock_in).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}) : "--"}
+                        {" → "}
+                        {r.clock_out ? new Date(r.clock_out).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}) : "Active"}
+                      </div>
+                      <div style={{ fontSize:13, fontWeight:800, color:C.blue, marginTop:2 }}>
+                        {formatDuration(r.clock_in, r.clock_out)}
+                        </div>
+                    </div>
+                  </div>
+
+                  {/* Units worked on */}
+                  {r.units_worked?.length > 0 && (
+                    <div style={{ marginBottom:10 }}>
+                      <div style={{ fontSize:10, fontWeight:700, color:"#aaa", letterSpacing:.5, marginBottom:6 }}>UNITS WORKED ON</div>
+                      <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                        {[...new Map(r.units_worked.map(u => [u.name||u, u])).values()].map(u => (
+                          <span key={u.id||u.name} style={{ background:C.blueLt, border:`1px solid ${C.border}`, borderRadius:20, padding:"3px 10px", fontSize:12, fontWeight:600, color:C.blue }}>
+                            {u.name||u}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tasks completed */}
+                  {dedupedTasks.length > 0 && (
+                    <div>
+                      <div style={{ fontSize:10, fontWeight:700, color:"#aaa", letterSpacing:.5, marginBottom:6 }}>TASKS COMPLETED</div>
+                      <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                        {dedupedTasks.map((t,i) => (
+                          <span key={i} style={{ background:"#F0FAF5", border:"1px solid #B8DFC9", borderRadius:20, padding:"3px 10px", fontSize:12, fontWeight:500, color:"#057642" }}>
+                            ✓ {t.task}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {dedupedTasks.length === 0 && (!r.units_worked || r.units_worked.length === 0) && (
+                    <div style={{ fontSize:13, color:"#aaa", fontStyle:"italic" }}>No task details submitted.</div>
+                  )}
+
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
